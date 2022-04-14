@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31919.166
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AzAcme.Cli", "src\AzAcme.Cli\AzAcme.Cli.csproj", "{28734B25-4CB4-4787-A3B8-39AC2C9091FD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{5E3EAEB6-4704-437D-B348-895C684B2CFA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AzAcme.Core", "src\AzAcme.Core\AzAcme.Core.csproj", "{EEEFBF10-AE29-4BDF-9493-37FF30875092}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{28734B25-4CB4-4787-A3B8-39AC2C9091FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{28734B25-4CB4-4787-A3B8-39AC2C9091FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{28734B25-4CB4-4787-A3B8-39AC2C9091FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{28734B25-4CB4-4787-A3B8-39AC2C9091FD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EEEFBF10-AE29-4BDF-9493-37FF30875092}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EEEFBF10-AE29-4BDF-9493-37FF30875092}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EEEFBF10-AE29-4BDF-9493-37FF30875092}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EEEFBF10-AE29-4BDF-9493-37FF30875092}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{28734B25-4CB4-4787-A3B8-39AC2C9091FD} = {5E3EAEB6-4704-437D-B348-895C684B2CFA}
+		{EEEFBF10-AE29-4BDF-9493-37FF30875092} = {5E3EAEB6-4704-437D-B348-895C684B2CFA}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0CF10D46-A83D-4644-96A7-94780996418B}
+	EndGlobalSection
+EndGlobal
