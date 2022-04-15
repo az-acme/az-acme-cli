@@ -38,7 +38,17 @@ namespace AzAcme.Core.Providers.KeyVault
 
             var op = this.GetExistingOperationOrNull(request.Name);
 
-            if (op == null || op.HasValue == false)
+            bool create = false;
+            if (op == null)
+            {
+                create = true;
+            }
+            else if(op != null && op.Properties != null && false == "inprogress".Equals(op.Properties.Status, StringComparison.InvariantCultureIgnoreCase))
+            {
+                create = true;
+            }
+
+            if (create)
             {
                 // create pending operation.
                 var sans = new SubjectAlternativeNames();

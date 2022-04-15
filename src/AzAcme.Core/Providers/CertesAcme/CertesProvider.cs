@@ -1,6 +1,10 @@
 ﻿using AzAcme.Core.Exceptions;
 using AzAcme.Core.Providers.Models;
 using Certes;
+using Certes.Acme;
+using Certes.Pkcs;
+using Org.BouncyCastle.OpenSsl;
+using Org.BouncyCastle.X509;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,22 +26,34 @@ namespace AzAcme.Core.Providers.CertesAcme
             this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         }
 
-        public async Task<IAcmeCredential> Register()
+        public async Task<IAcmeCredential> Register(AcmeRegistration registration)
         {
-            if(configuration.ForceRegistration || false == await this.registrationSecret.Exists())
+            if(registration.Force || false == await this.registrationSecret.Exists())
             {
-                if (string.IsNullOrEmpty(configuration.RegistrationEmailAddress))
+                if (string.IsNullOrEmpty(registration.Email))
                 {
                     throw new ConfigurationException("Registration Email Address must be set for registration");
                 }
 
-                if (!configuration.AgreedTermsOfService)
+                if (!registration.AcceptTermsOfService)
                 {
                     throw new ConfigurationException("Terms of service must be accepted before registration");
                 }
 
                 var context = new AcmeContext(configuration.Directory);
-                _ = await context.NewAccount(configuration.RegistrationEmailAddress, termsOfServiceAgreed: true);
+
+                // use EAB if we need to.
+                if(registration.EabAlgorithm != ExternalAccountBindingAlgorithms.NONE
+                    && registration.EabKeyId != null
+                    && registration.EabKey != null)
+                {
+                    _ = await context.NewAccount(registration.Email, termsOfServiceAgreed: true, registration.EabKeyId, registration.EabKey, registration.EabAlgorithm.ToString());
+                }
+                else
+                {
+                    _ = await context.NewAccount(registration.Email, termsOfServiceAgreed: true);
+                }
+                
                 var credential = context.AccountKey.ToPem();
 
                 await this.registrationSecret.CreateOrUpdate(credential);
@@ -144,6 +160,19 @@ namespace AzAcme.Core.Providers.CertesAcme
 
             var finalisedOrder = await certesOrder.Context.Finalize(csr.Csr);
 
+
+            var timeOut = DateTime.UtcNow.AddMinutes(5);
+            while(finalisedOrder.Status != Certes.Acme.Resource.OrderStatus.Valid)
+            {
+                Console.WriteLine("Waiting...status is " + finalisedOrder.Status);
+                if (DateTime.UtcNow > timeOut)
+                    break;
+
+                await Task.Delay(5000);
+                // update status.
+                finalisedOrder = await certesOrder.Context.Resource();
+            }
+
             if(finalisedOrder.Status != Certes.Acme.Resource.OrderStatus.Valid)
             {
                 throw new NotSupportedException($"Expecting ACME Order to be Finalised, but is still in status '{finalisedOrder.Status}'");
@@ -153,7 +182,9 @@ namespace AzAcme.Core.Providers.CertesAcme
 
             var chain = new CerticateChain();
 
-            chain.Chain.Add(System.Text.Encoding.UTF8.GetBytes(certChain.ToPem()));
+            var certToPem = ConvertToPem(certChain);
+
+            chain.Chain.Add(System.Text.Encoding.UTF8.GetBytes(certToPem));
             foreach (var issuer in certChain.Issuers)
             {
                 chain.Chain.Add(System.Text.Encoding.UTF8.GetBytes(issuer.ToPem()));
@@ -161,6 +192,52 @@ namespace AzAcme.Core.Providers.CertesAcme
 
             return chain;
 
+        }
+
+
+        /// <summary>
+        /// Encodes the full certificate chain in PEM.
+        /// </summary>
+        /// <param name="certificateChain">The certificate chain.</param>
+        /// <param name="certKey">The certificate key.</param>
+        /// <returns>The encoded certificate chain.</returns>
+        private static string ConvertToPem(CertificateChain certificateChain)
+        {
+            var certStore = new RelaxedCertificateStore();
+            
+            foreach (var issuer in certificateChain.Issuers)
+            {
+                certStore.Add(issuer.ToDer());
+            }
+
+            //var certParser1 = new X509CertificateParser();
+            //foreach (var additional in certificates.Certificates)
+            //{
+            //    var cert1 = certParser1.ReadCertificate(Encoding.UTF8.GetBytes(additional));
+            //    certStore.Add(cert1.GetEncoded());
+            //}
+
+            var issuers = certStore.GetIssuers(certificateChain.Certificate.ToDer(), requireAllIssuers: false);
+
+            using (var writer = new StringWriter())
+            {
+                //if (certKey != null)
+                //{
+                //    writer.WriteLine(certKey.ToPem().TrimEnd());
+                //}
+
+                writer.WriteLine(certificateChain.Certificate.ToPem().TrimEnd());
+
+                var certParser = new X509CertificateParser();
+                var pemWriter = new PemWriter(writer);
+                foreach (var issuer in issuers)
+                {
+                    var cert = certParser.ReadCertificate(issuer);
+                    pemWriter.WriteObject(cert);
+                }
+
+                return writer.ToString();
+            }
         }
     }
 }

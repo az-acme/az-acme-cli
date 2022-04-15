@@ -9,7 +9,7 @@ namespace AzAcme.Core.Providers
 {
     public interface IAcmeDirectory
     {
-        Task<IAcmeCredential> Register();
+        Task<IAcmeCredential> Register(AcmeRegistration registration);
         Task<IAcmeCredential> Login();
 
         Task<Order> ValidateChallenges(Order order);

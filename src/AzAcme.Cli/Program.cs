@@ -16,7 +16,8 @@ namespace AzAcmi
             System.Console.OutputEncoding = System.Text.Encoding.UTF8;
 
             var demo = new Demo();
-            await demo.Concept();
+            await demo.ZeroSsl();
+            //await demo.LetsEncryptStaging();
 
             return 0;
 
