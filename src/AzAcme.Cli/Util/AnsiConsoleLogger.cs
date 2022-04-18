@@ -42,7 +42,7 @@ namespace AzAcme.Cli.Util
 
             if (AnsiConsole.Profile.Capabilities.Unicode)
             {
-                string log = logLevel.ToString().Substring(0,3);
+                string log = LevelToShortName(logLevel);
                 string pre = $"[{LevelToColor(logLevel)}]";
                 string post = "[/]";
 
@@ -58,15 +58,30 @@ namespace AzAcme.Cli.Util
         {
             switch (logLevel)
             {
-                case LogLevel.Trace: return "silver";
-                case LogLevel.Debug: return "silver";
-                case LogLevel.Information: return "grey";
+                case LogLevel.Trace: return "grey";
+                case LogLevel.Debug: return "grey";
+                case LogLevel.Information: return "silver";
                 case LogLevel.Warning: return "yellow";
                 case LogLevel.Error: return "red";
                 case LogLevel.Critical:return "red";                    
             }
 
             return "black";
+        }
+
+        private static string LevelToShortName(LogLevel logLevel)
+        {
+            switch (logLevel)
+            {
+                case LogLevel.Trace: return "LOG";
+                case LogLevel.Debug: return "LOG";
+                case LogLevel.Information: return "INF";
+                case LogLevel.Warning: return "WARN";
+                case LogLevel.Error: return "ERR";
+                case LogLevel.Critical: return "ERR";
+            }
+
+            return "LOG";
         }
     }
 }
