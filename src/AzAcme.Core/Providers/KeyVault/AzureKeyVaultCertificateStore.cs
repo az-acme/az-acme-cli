@@ -1,6 +1,7 @@
 ﻿using AzAcme.Core.Providers.Models;
 using Azure;
 using Azure.Security.KeyVault.Certificates;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,10 +12,12 @@ namespace AzAcme.Core.Providers.KeyVault
 {
     public class AzureKeyVaultCertificateStore : ICertificateStore
     {
+        private readonly ILogger logger;
         private readonly CertificateClient client;
 
-        public AzureKeyVaultCertificateStore(CertificateClient client)
+        public AzureKeyVaultCertificateStore(ILogger logger, CertificateClient client)
         {
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.client = client ?? throw new ArgumentNullException(nameof(client));
         }
 
@@ -71,7 +74,9 @@ namespace AzAcme.Core.Providers.KeyVault
                 op = await client.StartCreateCertificateAsync(request.Name, policy);
             }
 
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
             return new CertificateCsr(request.Name, op.Properties.Csr);
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
         }
 
         public async Task Complete(CertificateRequest request, CerticateChain chain)

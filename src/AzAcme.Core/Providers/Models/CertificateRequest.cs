@@ -8,7 +8,7 @@ namespace AzAcme.Core.Providers.Models
 {
     public class CertificateRequest
     {
-        public CertificateRequest(string name, string subject, List<string> subjectAlternativeNames)
+        public CertificateRequest(string name, string subject, IList<string> subjectAlternativeNames)
         {
             Name = name;
             Subject = subject;
@@ -19,6 +19,6 @@ namespace AzAcme.Core.Providers.Models
 
         public string Subject { get; }
 
-        public List<string> SubjectAlternativeNames { get; }
+        public IList<string> SubjectAlternativeNames { get; }
     }
 }

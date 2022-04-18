@@ -1,11 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using Spectre.Console;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AzAcme.Cli.Util
 {
@@ -24,6 +18,8 @@ namespace AzAcme.Cli.Util
 
             }
         }
+        
+        // Scoping not needed. Basic implementation only.
         public IDisposable BeginScope<TState>(TState state)
         {
             return new Scope();
@@ -41,54 +37,36 @@ namespace AzAcme.Cli.Util
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
         {
+            if (!IsEnabled(logLevel))
+                return;
+
             if (AnsiConsole.Profile.Capabilities.Unicode)
             {
-            
+                string log = logLevel.ToString().Substring(0,3);
+                string pre = $"[{LevelToColor(logLevel)}]";
+                string post = "[/]";
 
-                string log = string.Empty;
-                string pre = "";
-                string post = "";
-
-                switch (logLevel)
-                {
-                    case LogLevel.Trace:
-                    case LogLevel.Debug:
-                        {
-                            log = "DBG";
-                            pre = "[silver]";
-                            post = "[/]";
-                            break;
-                        }
-                    case LogLevel.Information:
-                        {
-                            log = "LOG";
-                            pre = "[grey]";
-                            post = "[/]";
-                            break;
-                        }
-                    case LogLevel.Warning:
-                        {
-                            log = "WRN";
-                            pre = "[yellow]";
-                            post = "[/]";
-                            break;
-                        }
-                    case LogLevel.Error:
-                    case LogLevel.Critical:
-                        {
-                            pre = "[red]";
-                            post = "[/]";
-                            log = "ERR";
-                            break;
-                        }
-                }
-                
                 AnsiConsole.MarkupLine(pre + log + ": " + formatter(state, exception) + post);
             }
             else
             {
                 AnsiConsole.WriteLine(logLevel.ToString().ToUpper() + ":" + formatter(state, exception));
             }
+        }
+
+        private static string LevelToColor(LogLevel logLevel)
+        {
+            switch (logLevel)
+            {
+                case LogLevel.Trace: return "silver";
+                case LogLevel.Debug: return "silver";
+                case LogLevel.Information: return "grey";
+                case LogLevel.Warning: return "yellow";
+                case LogLevel.Error: return "red";
+                case LogLevel.Critical:return "red";                    
+            }
+
+            return "black";
         }
     }
 }

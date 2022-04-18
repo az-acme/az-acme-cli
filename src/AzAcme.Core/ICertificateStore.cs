@@ -1,15 +1,7 @@
-﻿using AzAcme.Core.Providers.KeyVault;
-using AzAcme.Core.Providers.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using AzAcme.Core.Providers.Models;
 
-namespace AzAcme.Core.Providers
+namespace AzAcme.Core
 {
-
-
     public interface ICertificateStore
     {
         Task<CertificateMetadata> GetMetadata(CertificateRequest request);

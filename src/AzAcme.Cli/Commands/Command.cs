@@ -19,59 +19,11 @@ namespace AzAcme.Cli.Commands
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        protected async Task<AcmeContext> CreateContext(Uri acmeServer, SecretClient client, string secretName)
-        {
-            var accSecret = await client.GetSecretAsync(secretName);
-
-            this.logger.LogInformation("Parsing ACME account key from secret...");
-
-            var pem = KeyFactory.FromPem(accSecret.Value.Value);
-
-            var context = new AcmeContext(acmeServer,pem);
-
-            return context;
-
-        }
-
-        protected abstract Task<int> OnExecute(StatusContext ctx, T opts);
+        protected abstract Task<int> OnExecute(T opts);
 
         public async Task<int> Execute(T opts)
         {
-            return await AnsiConsole.Status()
-                .StartAsync<int>($"Processing...", async ctx =>
-                {
-                    ctx.Spinner(Spinner.Known.Default);
-
-                    return await OnExecute(ctx, opts);
-                });
+            return await OnExecute(opts);
         }
-
-        protected DnsManagementClient CreateDnsManagementClient(string? tenantId = null)
-        {
-            this.logger.LogDebug("Creating DNS Management Client...");
-
-            var deafultClient = new DefaultAzureCredential();
-            
-            var token = deafultClient.GetToken(new Azure.Core.TokenRequestContext(new[] { $"https://management.azure.com/.default" }, tenantId: tenantId));
-            ServiceClientCredentials serviceClientCreds = new TokenCredentials(token.Token);
-            var dnsClient = new DnsManagementClient(serviceClientCreds);
-
-            return dnsClient;
-        }
-
-        protected CertificateClient CreateCertificateClient(Uri keyVaultUri)
-        {
-            var client = new CertificateClient(keyVaultUri, new DefaultAzureCredential());
-
-            return client;
-        }
-
-        protected SecretClient CreateSecretClient(Uri keyVaultUri)
-        {
-            var client = new SecretClient(keyVaultUri, new DefaultAzureCredential());
-
-            return client;
-        }
-
     }
 }

@@ -15,26 +15,10 @@ namespace AzAcme.Core.Providers.CertesAcme
     /// <summary>
     /// Represents a collection of X509 certificates.
     /// </summary>
+    /// <remarks>Adaption from the Certes implementation to not require full chains.</remarks>
     public class RelaxedCertificateStore
     {
         private readonly Dictionary<X509Name, X509Certificate> certificates = new Dictionary<X509Name, X509Certificate>();
-
-        private readonly Lazy<Dictionary<X509Name, X509Certificate>> embeddedCertificates = new Lazy<Dictionary<X509Name, X509Certificate>>(() =>
-        {
-            var certParser = new X509CertificateParser();
-            var assembly = typeof(PfxBuilder).GetTypeInfo().Assembly;
-            return assembly
-                .GetManifestResourceNames()
-                .Where(n => n.EndsWith(".pem"))
-                .Select(n =>
-                {
-                    using (var stream = assembly.GetManifestResourceStream(n))
-                    {
-                        return certParser.ReadCertificate(stream);
-                    }
-                })
-                .ToDictionary(c => c.SubjectDN, c => c);
-        }, true);
 
         /// <summary>
         /// Adds issuer certificates.
@@ -54,11 +38,10 @@ namespace AzAcme.Core.Providers.CertesAcme
         /// Gets the issuers of given certificate.
         /// </summary>
         /// <param name="der">The certificate.</param>
-        /// <param name="requireAllIssuers">If true, don't attempt to resolve all issuers from cert store.</param>
         /// <returns>
         /// The issuers of the certificate.
         /// </returns>
-        public IList<byte[]> GetIssuers(byte[] der, bool requireAllIssuers = false)
+        public IList<byte[]> GetIssuers(byte[] der)
         {
             var certParser = new X509CertificateParser();
             var certificate = certParser.ReadCertificate(der);
@@ -66,23 +49,15 @@ namespace AzAcme.Core.Providers.CertesAcme
             var chain = new List<X509Certificate>();
             while (!certificate.SubjectDN.Equivalent(certificate.IssuerDN))
             {
-                if (certificates.TryGetValue(certificate.IssuerDN, out var issuer) ||
-                    embeddedCertificates.Value.TryGetValue(certificate.IssuerDN, out issuer))
+                if (certificates.TryGetValue(certificate.IssuerDN, out var issuer))
                 {
                     chain.Add(issuer);
                     certificate = issuer;
                 }
                 else
                 {
-                    if (requireAllIssuers)
-                    {
-                        throw new AcmeException(
-                            string.Format("Issuer not found '{0}' for '{1}'", certificate.IssuerDN, certificate.SubjectDN));
-                    }
-                    else
-                    {
-                        break;
-                    }
+                    // just break out, we dont need all issuers.
+                    break;
                 }
             }
 

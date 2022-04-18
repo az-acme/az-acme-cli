@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace AzAcme.Core.Providers.CertesAcme
 {
-    public class CertesOrder : Order
+    public class CertesAcmeOrder : Order
     {
-        public CertesOrder(global::Certes.Acme.IOrderContext context)
+        public CertesAcmeOrder(global::Certes.Acme.IOrderContext context)
         {
             Context = context;
         }

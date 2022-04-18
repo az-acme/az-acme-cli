@@ -3,21 +3,19 @@ using AzAcme.Core.Providers.Models;
 using Microsoft.Azure.Management.Dns;
 using Microsoft.Azure.Management.Dns.Models;
 using Microsoft.Azure.Management.ResourceManager.Fluent.Core;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace AzAcme.Core.Providers.AzureDns
 {
     public class AzureDnsZone : IDnsZone
     {
+        private readonly ILogger logger;
         private readonly DnsManagementClient client;
         private ResourceId privateDnsResource;
-        public AzureDnsZone(DnsManagementClient client, string azureDnsZoneResourceId)
+        public AzureDnsZone(ILogger logger, DnsManagementClient client, string azureDnsZoneResourceId)
         {
             this.privateDnsResource = ResourceId.FromString(azureDnsZoneResourceId);
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.client = client ?? throw new ArgumentNullException(nameof(client));
             this.client.SubscriptionId = privateDnsResource.SubscriptionId;
         }

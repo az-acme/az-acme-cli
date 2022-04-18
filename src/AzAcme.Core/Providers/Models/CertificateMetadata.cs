@@ -11,9 +11,5 @@ namespace AzAcme.Core.Providers.Models
         public bool Exists { get; set; }
         public DateTimeOffset? Expires { get; set; }
 
-        public bool NewOrExpiresInDays(int days)
-        {
-            return !Exists || Expires.HasValue && DateTime.UtcNow.AddDays(days) > Expires;
-        }
     }
 }

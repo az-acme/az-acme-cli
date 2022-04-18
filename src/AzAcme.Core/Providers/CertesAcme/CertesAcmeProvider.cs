@@ -3,6 +3,7 @@ using AzAcme.Core.Providers.Models;
 using Certes;
 using Certes.Acme;
 using Certes.Pkcs;
+using Microsoft.Extensions.Logging;
 using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.X509;
 using System;
@@ -13,15 +14,16 @@ using System.Threading.Tasks;
 
 namespace AzAcme.Core.Providers.CertesAcme
 {
-    public class CertesProvider : IAcmeDirectory
+    public class CertesAcmeProvider : IAcmeDirectory
     {
      
-        private readonly CertesProviderConfiguration configuration;
-
+        private readonly CertesAcmeConfiguration configuration;
+        private readonly ILogger logger;
         private readonly IScopedSecret registrationSecret;
 
-        public CertesProvider(IScopedSecret registrationSecret, CertesProviderConfiguration configuration)
+        public CertesAcmeProvider(ILogger logger, IScopedSecret registrationSecret, CertesAcmeConfiguration configuration)
         {
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.registrationSecret = registrationSecret ?? throw new ArgumentNullException(nameof(registrationSecret));
             this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         }
@@ -71,14 +73,20 @@ namespace AzAcme.Core.Providers.CertesAcme
 
             var registration = await this.registrationSecret.GetSecret();
 
-            return new CertesAcmeCredential(this.configuration.Directory, registration);
+            return new CertesAcmeCredential(registration);
         }
 
         public async Task<Order> Order(IAcmeCredential credential, CertificateRequest certificateRequest)
         {
             var creds = credential as CertesAcmeCredential;
+
+            if(creds == null)
+            {
+                throw new ArgumentException($"Expecting to be of type {typeof(CertesAcmeCredential).Name} but was {credential.GetType().Name}", nameof(credential));
+            }
+
             var pem = KeyFactory.FromPem(creds.Pem);
-            var acmeContext = new AcmeContext(creds.Directory,pem);
+            var acmeContext = new AcmeContext(this.configuration.Directory,pem);
 
             var all = new List<string>();
             all.Add(certificateRequest.Subject);
@@ -86,7 +94,7 @@ namespace AzAcme.Core.Providers.CertesAcme
 
             var newOrder = await acmeContext.NewOrder(all);
 
-            var order = new CertesOrder(newOrder);
+            var order = new CertesAcmeOrder(newOrder);
 
             foreach (var identifier in all)
             {
@@ -102,48 +110,32 @@ namespace AzAcme.Core.Providers.CertesAcme
 
         public async Task<Order> ValidateChallenges(Order order)
         {
-            var certesOrder = order as CertesOrder;
+            var certesOrder = order as CertesAcmeOrder;
 
             if(certesOrder == null)
             {
-                throw new ArgumentException($"Expecing Order to be of type '{typeof(CertesOrder).Name}' but was '{order.GetType().Name}'");
+                throw new ArgumentException($"Expecing Order to be of type '{typeof(CertesAcmeOrder).Name}' but was '{order.GetType().Name}'");
             }
 
             foreach (var challenge in certesOrder.Challenges)
             {
-                //this.logger.LogWithColor(LogLevel.Information, "Waiting for ownership verification of '{0}'...", action.Identifier);
-
-                var auth = await certesOrder.Context.Authorization(challenge.Identitifer);
-                await (await auth.Dns()).Validate();
-                int attempt = 1;
-                while (attempt <= configuration.VerificationAttempts && challenge.Status == DnsChallenge.DnsChallengeStatus.Pending)
+                // only need to do anything if challenge is pending.
+                if (challenge.Status == DnsChallenge.DnsChallengeStatus.Pending)
                 {
-                    //ctx.Status($"Waiting for DNS TXT verification for '{action.Identifier}'. Attmept {attempt}/{attempts}...");
+                    var auth = await certesOrder.Context.Authorization(challenge.Identitifer);
+                    await (await auth.Dns()).Validate();
 
                     var res = await auth.Resource();
 
                     if (res.Status == Certes.Acme.Resource.AuthorizationStatus.Valid)
                     {
-                        //this.logger.LogWithColor(LogLevel.Information, "TXT Verified for '{0}' :check_mark:", action.Identifier);
                         challenge.SetStatus(DnsChallenge.DnsChallengeStatus.Validated);
                     }
                     else if (res.Status == Certes.Acme.Resource.AuthorizationStatus.Invalid)
                     {
                         challenge.SetStatus(DnsChallenge.DnsChallengeStatus.Failed);
                     }
-                    
-
-//#pragma warning disable CS8604 // Possible null reference argument.
-//                    this.logger.LogWithColor(LogLevel.Information, "Status is '{0}'. Waiting {1} seconds before checking again...", res.Status, delaySeconds);
-//#pragma warning restore CS8604 // Possible null reference argument.
-
-                    
-                    if (challenge.Status == DnsChallenge.DnsChallengeStatus.Pending)
-                    {
-                        attempt++;
-                        await Task.Delay(configuration.VerificationAttemptWaitSeconds * 1000);
-                    }
-                }
+                }                
             }
 
             return order;
@@ -151,11 +143,11 @@ namespace AzAcme.Core.Providers.CertesAcme
 
         public async Task<CerticateChain> Finalise(Order order, CertificateCsr csr)
         {
-            var certesOrder = order as CertesOrder;
+            var certesOrder = order as CertesAcmeOrder;
 
             if (certesOrder == null)
             {
-                throw new ArgumentException($"Expecing Order to be of type '{typeof(CertesOrder).Name}' but was '{order.GetType().Name}'");
+                throw new ArgumentException($"Expecing Order to be of type '{typeof(CertesAcmeOrder).Name}' but was '{order.GetType().Name}'");
             }
 
             var finalisedOrder = await certesOrder.Context.Finalize(csr.Csr);
@@ -191,9 +183,7 @@ namespace AzAcme.Core.Providers.CertesAcme
             }
 
             return chain;
-
         }
-
 
         /// <summary>
         /// Encodes the full certificate chain in PEM.
@@ -210,14 +200,7 @@ namespace AzAcme.Core.Providers.CertesAcme
                 certStore.Add(issuer.ToDer());
             }
 
-            //var certParser1 = new X509CertificateParser();
-            //foreach (var additional in certificates.Certificates)
-            //{
-            //    var cert1 = certParser1.ReadCertificate(Encoding.UTF8.GetBytes(additional));
-            //    certStore.Add(cert1.GetEncoded());
-            //}
-
-            var issuers = certStore.GetIssuers(certificateChain.Certificate.ToDer(), requireAllIssuers: false);
+            var issuers = certStore.GetIssuers(certificateChain.Certificate.ToDer());
 
             using (var writer = new StringWriter())
             {

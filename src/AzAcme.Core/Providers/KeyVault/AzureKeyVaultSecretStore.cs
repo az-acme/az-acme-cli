@@ -1,4 +1,5 @@
 ﻿using Azure.Security.KeyVault.Secrets;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,10 +10,12 @@ namespace AzAcme.Core.Providers.KeyVault
 {
     public class AzureKeyVaultSecretStore : ISecretStore
     {
+        private readonly ILogger logger;
         private readonly SecretClient client;
 
-        public AzureKeyVaultSecretStore(SecretClient client)
+        public AzureKeyVaultSecretStore(ILogger logger, SecretClient client)
         {
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.client = client ?? throw new ArgumentNullException(nameof(client));
         }
 
