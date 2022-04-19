@@ -3,15 +3,15 @@ using Spectre.Console;
 
 namespace AzAcme.Cli.Util
 {
-    public class AnsiConsoleLogger : ILogger
+    internal class AnsiConsoleLogger : ILogger
     {
         private readonly bool verbose = false;
-        public AnsiConsoleLogger(bool verbose)
+        internal AnsiConsoleLogger(bool verbose)
         {
             this.verbose = verbose;
         }
 
-        public class Scope : IDisposable
+        internal class Scope : IDisposable
         {
             public void Dispose()
             {
@@ -73,12 +73,12 @@ namespace AzAcme.Cli.Util
         {
             switch (logLevel)
             {
-                case LogLevel.Trace: return "LOG";
-                case LogLevel.Debug: return "LOG";
-                case LogLevel.Information: return "INF";
+                case LogLevel.Trace: return "TRCE";
+                case LogLevel.Debug: return "DBUG";
+                case LogLevel.Information: return "INFO";
                 case LogLevel.Warning: return "WARN";
                 case LogLevel.Error: return "ERR";
-                case LogLevel.Critical: return "ERR";
+                case LogLevel.Critical: return "CRIT";
             }
 
             return "LOG";

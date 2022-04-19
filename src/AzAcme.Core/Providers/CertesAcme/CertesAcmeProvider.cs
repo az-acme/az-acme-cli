@@ -2,15 +2,9 @@
 using AzAcme.Core.Providers.Models;
 using Certes;
 using Certes.Acme;
-using Certes.Pkcs;
 using Microsoft.Extensions.Logging;
 using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.X509;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AzAcme.Core.Providers.CertesAcme
 {
@@ -156,7 +150,7 @@ namespace AzAcme.Core.Providers.CertesAcme
             var timeOut = DateTime.UtcNow.AddMinutes(5);
             while(finalisedOrder.Status != Certes.Acme.Resource.OrderStatus.Valid)
             {
-                Console.WriteLine("Waiting...status is " + finalisedOrder.Status);
+                this.logger.LogDebug("Waiting for order to be status '{0}'. Current status is '{1}'.", Certes.Acme.Resource.OrderStatus.Valid, finalisedOrder.Status);
                 if (DateTime.UtcNow > timeOut)
                     break;
 

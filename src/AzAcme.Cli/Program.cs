@@ -22,16 +22,10 @@ namespace AzAcmi
     {
         static async Task<int> Main(string[] args)
         {
-            System.Console.OutputEncoding = System.Text.Encoding.UTF8;
+            Console.OutputEncoding = Encoding.UTF8;
 
             var console = AnsiConsole.Console;
             var logger = new AnsiConsoleLogger(args.Contains("--verbose"));
-
-            //var demo = new Demo();
-            ////await demo.ZeroSsl(logger);
-            //await demo.LetsEncryptStaging(logger);
-
-            //return 0;
 
             var parser = new CommandLine.Parser(with => with.HelpWriter = null)
                                 .ParseArguments<OrderOptions, RegistrationOptions>(args);
@@ -58,7 +52,7 @@ namespace AzAcmi
                 ctx.Status("Loading Azure Credentials...");
 
                 // Azure Credentials.
-                var azureCreds = new DefaultAzureCredential();
+                var azureCreds = CreateDefaultAzureCredentials();
 
                 ctx.Status("Creating Key Vault Clients...");
 
@@ -85,7 +79,7 @@ namespace AzAcmi
                 var token = azureCreds.GetToken(new Azure.Core.TokenRequestContext(new[] { $"https://management.azure.com/.default" }, tenantId: options.AadTenantId));
                 ServiceClientCredentials serviceClientCreds = new TokenCredentials(token.Token);
                 var dnsClient = new DnsManagementClient(serviceClientCreds);
-                IDnsZone azureDns = new AzureDnsZone(logger, dnsClient, options.DnsZoneResourceId);
+                IDnsZone azureDns = new AzureDnsZone(logger, dnsClient, options.DnsZoneResourceId, options.Zone);
 
                 // command
                 var rc = new OrderCommand(logger, certificateStore, acmeProvider, azureDns);
@@ -98,8 +92,8 @@ namespace AzAcmi
         static async Task<RegistrationCommand> BuildRegistrationCommand(ILogger logger, RegistrationOptions options)
         {
             // Azure Credentials.
-            var azureCreds = new DefaultAzureCredential();
-            
+            var azureCreds = CreateDefaultAzureCredentials();
+
             // Key Vault Related
             var kvSecretClient = new SecretClient(options.KeyVaultUri, azureCreds);
             ISecretStore secretStore = new AzureKeyVaultSecretStore(logger, kvSecretClient);
@@ -113,6 +107,18 @@ namespace AzAcmi
             var rc = new RegistrationCommand(logger, acmeProvider);
 
             return rc;
+        }
+
+        static DefaultAzureCredential CreateDefaultAzureCredentials()
+        {
+            var authOptions = new DefaultAzureCredentialOptions()
+            {
+                ExcludeVisualStudioCodeCredential = true,
+                ExcludeVisualStudioCredential = true
+            };
+            var azureCreds = new DefaultAzureCredential(authOptions);
+
+            return azureCreds;
         }
 
         static string Banner()

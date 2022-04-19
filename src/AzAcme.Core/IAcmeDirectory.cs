@@ -5,6 +5,7 @@ namespace AzAcme.Core
     public interface IAcmeDirectory
     {
         Task<IAcmeCredential> Register(AcmeRegistration registration);
+
         Task<IAcmeCredential> Login();
 
         Task<Order> ValidateChallenges(Order order);

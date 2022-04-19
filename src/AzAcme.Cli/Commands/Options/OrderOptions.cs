@@ -1,5 +1,4 @@
-﻿using Certes.Acme;
-using CommandLine;
+﻿using CommandLine;
 
 namespace AzAcme.Cli.Commands.Options
 {
@@ -16,8 +15,8 @@ namespace AzAcme.Cli.Commands.Options
         [Option("certificate", Required = true, HelpText = "Name of certificate resource in Key Vault")]
         public string Certificate { get; internal set; }
 
-        [Option("server", HelpText = "ACME Server URI. Defaults to ACME for Letsencrypt.")]
-        public Uri Server { get; set; } = WellKnownServers.LetsEncryptV2;
+        [Option("server", Required = true, HelpText = "ACME Server URI. Defaults to ACME for Letsencrypt.")]
+        public Uri Server { get; set; }
 
         [Option("renew-within", Required = false, Default = 30, HelpText = "Renew within this amount of days before expiry.")]
         public int RenewWithinDays { get; set; }
@@ -35,7 +34,7 @@ namespace AzAcme.Cli.Commands.Options
         public string? AadTenantId { get; set; } = null;
 
         [Option("zone", Required = false, HelpText = "Optionally override the zone name inferred by the Azure DNS Zone Resource Name. Needed if delegating domain for ACME verifications.")]
-        public string? Zone { get; set; } = null;
+        public string Zone { get; set; }
 
         [Option("force-order", HelpText = "Force order / renewal even if not expiring soon.")]
         public bool ForceOrder { get; set; } = false;

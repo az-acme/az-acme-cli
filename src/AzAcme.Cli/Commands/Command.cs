@@ -1,12 +1,4 @@
-﻿using AzAcme.Cli.Util;
-using Azure.Identity;
-using Azure.Security.KeyVault.Certificates;
-using Azure.Security.KeyVault.Secrets;
-using Certes;
-using Microsoft.Azure.Management.Dns;
-using Microsoft.Extensions.Logging;
-using Microsoft.Rest;
-using Spectre.Console;
+﻿using Microsoft.Extensions.Logging;
 
 namespace AzAcme.Cli.Commands
 {

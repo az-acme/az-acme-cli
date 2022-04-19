@@ -1,11 +1,7 @@
 ﻿using AzAcme.Cli.Commands.Options;
-using AzAcme.Cli.Util;
 using AzAcme.Core;
-using AzAcme.Core.Providers.CertesAcme;
 using AzAcme.Core.Providers.Models;
-using Certes;
 using Microsoft.Extensions.Logging;
-using Spectre.Console;
 
 namespace AzAcme.Cli.Commands
 {

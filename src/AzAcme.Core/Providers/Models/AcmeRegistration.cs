@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace AzAcme.Core.Providers.Models
+﻿namespace AzAcme.Core.Providers.Models
 {
     public enum ExternalAccountBindingAlgorithms { NONE, HS256, HS512, HS384 }
 

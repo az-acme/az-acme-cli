@@ -1,17 +1,9 @@
-﻿using Certes;
-using Certes.Pkcs;
-using Org.BouncyCastle.Asn1.X509;
+﻿using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.X509;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AzAcme.Core.Providers.CertesAcme
 {
-  
+
     /// <summary>
     /// Represents a collection of X509 certificates.
     /// </summary>
