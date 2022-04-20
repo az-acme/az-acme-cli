@@ -2,7 +2,7 @@
 
 > Documentation is still a work in progress and will continue to evolve as the first release is offically dropped.
 
-While there are many ACMI clients that exist, ```az-acme``` is different in that it has been designed from the outset with a focus on Microsoft Azure and aligned with the following principals.
+While there are many ACMI clients that exist, ```az-acme``` is different in that it has been designed from the outset with a focus on Microsoft Azure and aligned to the following goals.
 
 - Replicate certificate management capabilities for ACMI based certificate issuers that exist natively between Azure Key Vault and Digicert / GlobalSign.
 - Store certificates in Azure Key Vault to enable existing Azure native integrations between services and Azure Key Vault to operate as expected.
@@ -38,7 +38,6 @@ For services that use EAB, such as ZeroSSL, additional parameters can be provide
         --email <your-email-address> \
         --eab-kid <key id from provider> \
         --eab-hmac-key <key from provider> \
-        --eab-algo <key from provider> \
         --agree-tos \
         --verbose
 ```
@@ -67,7 +66,7 @@ The output of the above will result in output similar to the below.
 
 ![Order](./docs/force-order.gif)
 
-When executing **without** the ```--force-order``` flag, the order is only submitted to the ACME provider if the certificate does not exist within Azure Key Vault, or will expire within the specified number of days (see ```--renew-within``` parameter, defaults to 30 days) from the time of executution.
+When executing **without** the ```--force-order``` flag, the order is only submitted to the ACME provider if the certificate does not exist within Azure Key Vault, or will expire within the specified number of days (see ```--renew-within-days``` parameter, defaults to 30 days) from the time of executution.
 
 This approach makes it simple to run the certificate ordering / renewal process as a nightly operation via existing operational tool chails such as Azure DevOps Pipelines, or GitHub Actions.
 
@@ -82,7 +81,10 @@ As more issuers are tested they will be added below.
 
 ## DNS Providers
 
-Currently only Azure DNS is supported.
+Currently only Azure DNS is supported as a DNS provider for ACME challenges. ACME supports domain delegation which can be configured via CNAME or NS records to direct **_acme-challenge** records to a separeate domain / zone. 
+
+When using DNS delegation, set the ```--delegated-zone``` parameter to the original zone name, ensuring the correct challenge DNS records are created. Without this parameter, the challenge records created are based on the Azure DNS resource name (which is the zone name).
+
 
 ## Shout Outs
 
@@ -90,4 +92,4 @@ A shout out to the core projects ```az-acme``` is built upon.
 
 - https://github.com/fszlin/certes
 - https://github.com/spectreconsole/spectre.console
-
+- https://github.com/commandlineparser/commandline
