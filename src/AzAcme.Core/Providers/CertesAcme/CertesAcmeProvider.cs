@@ -39,8 +39,7 @@ namespace AzAcme.Core.Providers.CertesAcme
                 var context = new AcmeContext(configuration.Directory);
 
                 // use EAB if we need to.
-                if(registration.EabAlgorithm != ExternalAccountBindingAlgorithms.NONE
-                    && registration.EabKeyId != null
+                if(registration.EabKeyId != null
                     && registration.EabKey != null)
                 {
                     _ = await context.NewAccount(registration.Email, termsOfServiceAgreed: true, registration.EabKeyId, registration.EabKey, registration.EabAlgorithm.ToString());

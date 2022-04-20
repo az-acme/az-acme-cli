@@ -18,12 +18,11 @@ namespace AzAcme.Cli.Commands
             AcmeRegistration registration;
 
             if (!string.IsNullOrEmpty(opts.EabKid)
-                && !string.IsNullOrEmpty(opts.EabHmacKey)
-                && !string.IsNullOrEmpty(opts.EabAlgorithm))
+                && !string.IsNullOrEmpty(opts.EabHmacKey))
             {
                 registration = new AcmeRegistration(opts.AccountEmailAddress,
                                                             opts.AgreeTermsOfService,
-                                                            Enum.Parse<ExternalAccountBindingAlgorithms>(opts.EabAlgorithm, true),
+                                                            ExternalAccountBindingAlgorithms.HS256, // only support this for now.
                                                             opts.EabKid,
                                                             opts.EabHmacKey,
                                                             opts.ForceRegistration);

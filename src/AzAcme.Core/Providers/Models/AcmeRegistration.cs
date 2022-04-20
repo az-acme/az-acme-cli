@@ -1,6 +1,6 @@
 ﻿namespace AzAcme.Core.Providers.Models
 {
-    public enum ExternalAccountBindingAlgorithms { NONE, HS256, HS512, HS384 }
+    public enum ExternalAccountBindingAlgorithms { HS256, HS512, HS384 }
 
     public class AcmeRegistration
     {
@@ -23,7 +23,7 @@
 
         public string Email { get; }
 
-        public ExternalAccountBindingAlgorithms EabAlgorithm { get; set; } = ExternalAccountBindingAlgorithms.NONE;
+        public ExternalAccountBindingAlgorithms EabAlgorithm { get; set; }
 
         public string? EabKeyId { get; }
 
