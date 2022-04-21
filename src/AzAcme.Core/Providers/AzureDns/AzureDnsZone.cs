@@ -14,7 +14,7 @@ namespace AzAcme.Core.Providers.AzureDns
         private ResourceId azureDnsResource;
         private string zoneName;
 
-        public AzureDnsZone(ILogger logger, DnsManagementClient client, string azureDnsZoneResourceId, string zoneOverride)
+        public AzureDnsZone(ILogger logger, DnsManagementClient client, string azureDnsZoneResourceId, string? zoneOverride)
         {
             this.azureDnsResource = ResourceId.FromString(azureDnsZoneResourceId);
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));

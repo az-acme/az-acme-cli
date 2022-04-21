@@ -1,8 +1,8 @@
-﻿using AzAcme.Cli.Commands;
+﻿using AzAcme.Cli;
+using AzAcme.Cli.Commands;
 using AzAcme.Cli.Commands.Options;
 using AzAcme.Cli.Util;
 using AzAcme.Core;
-using AzAcme.Core.Providers.AzureDns;
 using AzAcme.Core.Providers.CertesAcme;
 using AzAcme.Core.Providers.KeyVault;
 using Azure.Identity;
@@ -10,9 +10,7 @@ using Azure.Security.KeyVault.Certificates;
 using Azure.Security.KeyVault.Secrets;
 using CommandLine;
 using CommandLine.Text;
-using Microsoft.Azure.Management.Dns;
 using Microsoft.Extensions.Logging;
-using Microsoft.Rest;
 using Spectre.Console;
 using System.Text;
 
@@ -74,15 +72,20 @@ namespace AzAcmi
 
                 ctx.Status("Creating Azure DNS Client...");
 
-                // DNS
-                logger.LogDebug("Getting DNS Client Token from AAD...");
-                var token = azureCreds.GetToken(new Azure.Core.TokenRequestContext(new[] { $"https://management.azure.com/.default" }, tenantId: options.AadTenantId));
-                ServiceClientCredentials serviceClientCreds = new TokenCredentials(token.Token);
-                var dnsClient = new DnsManagementClient(serviceClientCreds);
-                IDnsZone azureDns = new AzureDnsZone(logger, dnsClient, options.DnsZoneResourceId, options.Zone);
+                // create using factory for future and to hide lazy logic.
+                var dns = DnsFactory.Create(logger,
+                    new DnsFactory.DnsOptions
+                    {
+                        Provider = DnsProviders.AzureDns,
+                        AadTenantId = options.AadTenantId,
+                        AzureCredential = azureCreds,
+                        AzureDnsResourceId = options.DnsZoneResourceId,
+                        ZoneOverride = options.Zone
+                    }
+                );
 
                 // command
-                var rc = new OrderCommand(logger, certificateStore, acmeProvider, azureDns);
+                var rc = new OrderCommand(logger, certificateStore, acmeProvider, dns);
 
                 return rc;
             });
