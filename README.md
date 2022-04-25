@@ -1,6 +1,6 @@
 # AZ ACMI 
 
-> Documentation is still a work in progress and will continue to evolve as the first release is offically dropped.
+> Refer to documentation at https://azacme.dev for detailed information.
 
 While there are many ACMI clients that exist, ```az-acme``` is different in that it has been designed from the outset with a focus on Microsoft Azure and aligned to the following goals.
 
