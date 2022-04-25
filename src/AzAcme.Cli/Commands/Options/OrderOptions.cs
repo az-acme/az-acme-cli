@@ -24,7 +24,10 @@ namespace AzAcme.Cli.Commands.Options
         [Option("subject", Required = true, HelpText = "Subject name of the certificate, such as 'foo.example.com'.")]
         public string Subject { get; set; }
 
-        [Option("azure-dns-zone", Required = true, HelpText = "Resource ID for Azure DNS Zone to use for challenge.")]
+        [Option("dns-provider", Required = true, Default = DnsProviders.Azure, HelpText = "DNS provider for challenges.")]
+        public DnsProviders DnsProvider { get; set; }
+
+        [Option("azure-dns-zone", Required = false, HelpText = "Resource ID for Azure DNS Zone to use for challenge.")]
         public string DnsZoneResourceId { get; set; }
 
         [Option("sans", Required = false, Separator = ' ', HelpText = "Subjet Alternative Names (SANs) space separated.")]

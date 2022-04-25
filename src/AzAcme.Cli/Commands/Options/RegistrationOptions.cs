@@ -26,10 +26,10 @@ namespace AzAcme.Cli.Commands.Options
         [Option("agree-tos", HelpText = "Agree to the Terms of Service.")]
         public bool AgreeTermsOfService { get; set; } = false;
 
-        [Option("eab-kid", HelpText = "External Account Binding Key ID.")]
+        [Option("eab-kid", HelpText = "External Account Binding Key ID. Environment variable 'AZ_ACME_EAB_KID' can also be used.")]
         public string? EabKid { get; set; }
 
-        [Option("eab-hmac-key", HelpText = "External Account Binding HMAC Key.")]
+        [Option("eab-hmac-key", HelpText = "External Account Binding HMAC Key. Environment variable 'AZ_ACME_EAB_KEY' can also be used.")]
         public string? EabHmacKey { get; set; }
 
 
