@@ -32,14 +32,14 @@ namespace AzAcme.Cli
         {
             switch (options.Provider)
             {
-                case DnsProviders.AzureDns:
+                case DnsProviders.Azure:
                     {
                         if(options.AzureCredential == null)
                         {
                             throw new ArgumentException("Azure Credentials must be set.");
                         }
 
-                        if(options.AzureDnsResourceId == null)
+                        if(string.IsNullOrEmpty(options.AzureDnsResourceId))
                         {
                             throw new ConfigurationException("Azure DNS Resource ID must be set.");
                         }

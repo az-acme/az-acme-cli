@@ -3,6 +3,7 @@ using AzAcme.Cli.Commands;
 using AzAcme.Cli.Commands.Options;
 using AzAcme.Cli.Util;
 using AzAcme.Core;
+using AzAcme.Core.Exceptions;
 using AzAcme.Core.Providers.CertesAcme;
 using AzAcme.Core.Providers.KeyVault;
 using Azure.Identity;
@@ -23,23 +24,36 @@ namespace AzAcmi
             Console.OutputEncoding = Encoding.UTF8;
 
             var console = AnsiConsole.Console;
-            var logger = new AnsiConsoleLogger(args.Contains("--verbose"));
+            var verbose = args.Contains("--verbose");
+            var logger = new AnsiConsoleLogger(verbose);
 
             var parser = new CommandLine.Parser(with => with.HelpWriter = null)
                                 .ParseArguments<OrderOptions, RegistrationOptions>(args);
 
-            return await parser.MapResult(
-                (RegistrationOptions opts) => 
+            try
+            {
+                return await parser.MapResult(
+                    (RegistrationOptions opts) =>
+                    {
+                        var cmd = BuildRegistrationCommand(logger, opts).Result;
+                        return cmd.Execute(opts);
+                    },
+                    (OrderOptions opts) =>
+                    {
+                        var cmd = BuildOrderCommand(logger, opts).Result;
+                        return cmd.Execute(opts);
+                    },
+                    errs => Task.FromResult(DisplayHelp(parser)));
+            }
+            catch(ConfigurationException ex)
+            {
+                console.MarkupLine("[red]{0}[/]",ex.Message);
+                if (verbose)
                 {
-                    var cmd = BuildRegistrationCommand(logger, opts).Result;
-                    return cmd.Execute(opts);
-                },
-                (OrderOptions opts) =>
-                {
-                    var cmd = BuildOrderCommand(logger, opts).Result;
-                    return cmd.Execute(opts);
-                },
-                errs => Task.FromResult(DisplayHelp(parser)));
+                    logger.LogError(ex, ex.Message);
+                }
+                return 1;
+            }
         }
 
         static async Task<OrderCommand> BuildOrderCommand(ILogger logger, OrderOptions options)
@@ -60,6 +74,15 @@ namespace AzAcmi
                 ISecretStore secretStore = new AzureKeyVaultSecretStore(logger, kvSecretClient);
                 IScopedSecret registrationSecret = await secretStore.CreateScopedSecret(options.AccountSecretName);
 
+                // Environment Variables
+                var envResolver = new EnvironmentVariableResolver(logger, secretStore, Environment.GetEnvironmentVariables());
+                var ok = envResolver.Parse(options.EnvFromSecrets);
+
+                if (!ok)
+                {
+                    throw new ConfigurationException("Error parsing Environment to Secret values. Exiting for safety.");
+                }
+
                 // Key Vault Certificates
                 logger.LogDebug("Creating Azure Key Vault certificate client...");
                 var kvCertificateClient = new CertificateClient(options.KeyVaultUri, azureCreds);
@@ -76,7 +99,7 @@ namespace AzAcmi
                 var dns = DnsFactory.Create(logger,
                     new DnsFactory.DnsOptions
                     {
-                        Provider = DnsProviders.AzureDns,
+                        Provider = options.DnsProvider,
                         AadTenantId = options.AadTenantId,
                         AzureCredential = azureCreds,
                         AzureDnsResourceId = options.DnsZoneResourceId,
@@ -85,7 +108,7 @@ namespace AzAcmi
                 );
 
                 // command
-                var rc = new OrderCommand(logger, certificateStore, acmeProvider, dns);
+                var rc = new OrderCommand(logger, envResolver, certificateStore, acmeProvider, dns);
 
                 return rc;
             });
@@ -101,13 +124,22 @@ namespace AzAcmi
             var kvSecretClient = new SecretClient(options.KeyVaultUri, azureCreds);
             ISecretStore secretStore = new AzureKeyVaultSecretStore(logger, kvSecretClient);
             IScopedSecret registrationSecret = await secretStore.CreateScopedSecret(options.AccountSecretName);
-            
+
+            // Environment Variables
+            var envResolver = new EnvironmentVariableResolver(logger, secretStore, Environment.GetEnvironmentVariables());
+            var ok = envResolver.Parse(options.EnvFromSecrets);
+
+            if (!ok)
+            {
+                throw new ConfigurationException("Error parsing Environment to Secret values. Exiting for safety.");
+            }
+
             // directory
             var certesConfiguration = new CertesAcmeConfiguration(options.Server);
             IAcmeDirectory acmeProvider = new CertesAcmeProvider(logger, registrationSecret, certesConfiguration);
 
             // command
-            var rc = new RegistrationCommand(logger, acmeProvider);
+            var rc = new RegistrationCommand(logger, envResolver, acmeProvider);
 
             return rc;
         }

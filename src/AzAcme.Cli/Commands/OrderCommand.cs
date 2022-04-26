@@ -1,4 +1,5 @@
 ﻿using AzAcme.Cli.Commands.Options;
+using AzAcme.Cli.Util;
 using AzAcme.Core;
 using AzAcme.Core.Extensions;
 using AzAcme.Core.Providers.Models;
@@ -14,9 +15,10 @@ namespace AzAcme.Cli.Commands
         private readonly IDnsZone dnsZone;
 
         public OrderCommand(ILogger logger,
+            EnvironmentVariableResolver environmentVariableResolver,
             ICertificateStore certificateStore,
             IAcmeDirectory acmeDirectory,
-            IDnsZone dnsZone) : base(logger)
+            IDnsZone dnsZone) : base(logger, environmentVariableResolver)
         {
             this.certificateStore = certificateStore ?? throw new ArgumentNullException(nameof(certificateStore));
             this.acmeDirectory = acmeDirectory ?? throw new ArgumentNullException(nameof(acmeDirectory));
