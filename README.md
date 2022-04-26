@@ -79,12 +79,6 @@ As more issuers are tested they will be added below.
 - Let's Encrypt (Production & Staging)
 - ZeroSSL (With EAB)
 
-## DNS Providers
-
-Currently only Azure DNS is supported as a DNS provider for ACME challenges. ACME supports domain delegation which can be configured via CNAME or NS records to direct **_acme-challenge** records to a separeate domain / zone. 
-
-When using DNS delegation, set the ```--delegated-zone``` parameter to the original zone name, ensuring the correct challenge DNS records are created. Without this parameter, the challenge records created are based on the Azure DNS resource name (which is the zone name).
-
 
 ## Shout Outs
 

@@ -74,6 +74,15 @@ namespace AzAcmi
                 ISecretStore secretStore = new AzureKeyVaultSecretStore(logger, kvSecretClient);
                 IScopedSecret registrationSecret = await secretStore.CreateScopedSecret(options.AccountSecretName);
 
+                // Environment Variables
+                var envResolver = new EnvironmentVariableResolver(logger, secretStore, Environment.GetEnvironmentVariables());
+                var ok = envResolver.Parse(options.EnvFromSecrets);
+
+                if (!ok)
+                {
+                    throw new ConfigurationException("Error parsing Environment to Secret values. Exiting for safety.");
+                }
+
                 // Key Vault Certificates
                 logger.LogDebug("Creating Azure Key Vault certificate client...");
                 var kvCertificateClient = new CertificateClient(options.KeyVaultUri, azureCreds);
@@ -99,7 +108,7 @@ namespace AzAcmi
                 );
 
                 // command
-                var rc = new OrderCommand(logger, certificateStore, acmeProvider, dns);
+                var rc = new OrderCommand(logger, envResolver, certificateStore, acmeProvider, dns);
 
                 return rc;
             });
@@ -115,13 +124,22 @@ namespace AzAcmi
             var kvSecretClient = new SecretClient(options.KeyVaultUri, azureCreds);
             ISecretStore secretStore = new AzureKeyVaultSecretStore(logger, kvSecretClient);
             IScopedSecret registrationSecret = await secretStore.CreateScopedSecret(options.AccountSecretName);
-            
+
+            // Environment Variables
+            var envResolver = new EnvironmentVariableResolver(logger, secretStore, Environment.GetEnvironmentVariables());
+            var ok = envResolver.Parse(options.EnvFromSecrets);
+
+            if (!ok)
+            {
+                throw new ConfigurationException("Error parsing Environment to Secret values. Exiting for safety.");
+            }
+
             // directory
             var certesConfiguration = new CertesAcmeConfiguration(options.Server);
             IAcmeDirectory acmeProvider = new CertesAcmeProvider(logger, registrationSecret, certesConfiguration);
 
             // command
-            var rc = new RegistrationCommand(logger, acmeProvider);
+            var rc = new RegistrationCommand(logger, envResolver, acmeProvider);
 
             return rc;
         }
