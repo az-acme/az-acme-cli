@@ -72,6 +72,51 @@ This approach makes it simple to run the certificate ordering / renewal process 
 
 ![Order](./docs/skip-order.gif)
 
+## Using Github Action
+
+
+```yaml
+# File: .github/workflows/order-certificates.yml
+
+on: [push] # change to schedule
+
+name: order-certificates
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    # Register with provider if not already registered
+    - uses: az-acme/az-acme-cli@v1
+      with:
+        verb: register
+        args: >- 
+            --server https://acme-v02.api.letsencrypt.org/directory
+            --key-vault-uri https://<kvname>.vault.azure.net/     
+            --account-secret lets-encrypt-registration
+            --email acmi@azacme.dev
+            --agree-tos
+
+    # Order certificate (only if new or close to expiry)
+    - uses: az-acme/az-acme-cli@v1
+      with:
+        verb: order
+        args: >- 
+            --server https://acme-v02.api.letsencrypt.org/directory
+            --key-vault-uri https://<kvname>.vault.azure.net/     
+            --account-secret lets-encrypt-registration
+            --dns-zone /subscriptions/xxxxx/resourceGroups/xxxxxxx/providers/Microsoft.Network/dnszones/azacme.dev
+            --certificate wildcard-demo-azacme-dev
+            --subject *.demo.azacme.dev
+            
+```
+
+
+
 ## Tested ACME Issuers
 
 As more issuers are tested they will be added below.
