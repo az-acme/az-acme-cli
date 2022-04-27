@@ -17,6 +17,6 @@ LABEL com.github.actions.name="Az-Acme"
 # Limit to 160 characters
 LABEL com.github.actions.description="The simplest ACME Issuer for Azure Key Vault"
 
-WORKDIR /app
+WORKDIR /usr/local/bin
 COPY --from=build-env /app/out .
-ENTRYPOINT ["./az-acme"]
+ENTRYPOINT ["az-acme"]
