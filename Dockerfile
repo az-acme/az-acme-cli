@@ -3,7 +3,7 @@ WORKDIR /app
 
 COPY . ./
 RUN dotnet restore
-RUN dotnet publish -c Release -o out --no-self-contained
+RUN dotnet publish ./src/AzAcme.Cli/AzAcme.Cli.csproj -c Release -o out --no-self-contained
 
 # Build runtime image
 FROM mcr.microsoft.com/dotnet/runtime:6.0

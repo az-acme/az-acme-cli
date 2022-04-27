@@ -13,6 +13,7 @@ using CommandLine;
 using CommandLine.Text;
 using Microsoft.Extensions.Logging;
 using Spectre.Console;
+using System.Diagnostics;
 using System.Text;
 
 namespace AzAcmi
@@ -178,6 +179,22 @@ namespace AzAcmi
                 h.Copyright = "Copyright (c) " + DateTime.UtcNow.Year + " AZ ACME Authors";
                 return h;
             }));
+
+            // if version is requested, then dont return 1 error code.
+            if (parserResult is CommandLine.NotParsed<object>)
+            {
+                var pr = parserResult as CommandLine.NotParsed<object>;
+                if (pr != null && pr.Errors.Any())
+                {
+                    var vre = pr.Errors.First() as CommandLine.VersionRequestedError;
+
+                    if(vre != null)
+                    {
+                        return 0;
+                    }
+                }
+            }
+
             return 1;
         }
     }
