@@ -26,6 +26,8 @@ namespace AzAcme.Core.Providers.CertesAcme
         {
             if(registration.Force || false == await this.registrationSecret.Exists())
             {
+                this.logger.LogInformation("Registering with provider...");
+
                 if (string.IsNullOrEmpty(registration.Email))
                 {
                     throw new ConfigurationException("Registration Email Address must be set for registration");
@@ -52,6 +54,10 @@ namespace AzAcme.Core.Providers.CertesAcme
                 var credential = context.AccountKey.ToPem();
 
                 await this.registrationSecret.CreateOrUpdate(credential);
+            }
+            else
+            {
+                this.logger.LogInformation("Alredy registered. Use '--force-registration' or remove the account secret from Key Vault to re-register.");
             }
 
             return await Login();

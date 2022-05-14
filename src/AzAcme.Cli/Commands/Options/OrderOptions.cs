@@ -36,7 +36,7 @@ namespace AzAcme.Cli.Commands.Options
         [Option("aad-tenant", Required = false, HelpText = "Explicitly set AAD Tenant ID for obtaining JWT token for Azure DNS API.")]
         public string? AadTenantId { get; set; } = null;
 
-        [Option("delegated-zone", Required = false, HelpText = "Zone being delegated from to determine TXT records.")]
+        [Option("zone-name", Required = false, HelpText = "Set zone name when being delegated from to calculare correct TXT records.")]
         public string Zone { get; set; }
 
         [Option("force-order", HelpText = "Force order / renewal even if not expiring soon.")]
