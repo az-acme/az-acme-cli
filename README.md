@@ -86,32 +86,35 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
+    - uses: az-acme/setup-cli-action@v1
+      with:
+        version: 0.2
+
     - uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    # Register with provider if not already registered
-    - uses: az-acme/az-acme-cli@v1
-      with:
-        verb: register
-        args: >- 
-            --server https://acme-v02.api.letsencrypt.org/directory
-            --key-vault-uri https://<kvname>.vault.azure.net/     
-            --account-secret lets-encrypt-registration
-            --email acmi@azacme.dev
-            --agree-tos
+    - name: Register with Staging
+      run: |
+        az-acme register \
+          --server https://acme-staging-v02.api.letsencrypt.org/directory \
+          --key-vault-uri https://kvazacmedev.vault.azure.net/ \
+          --account-secret letsencrypt-stg-registration \
+          --email demo@azacme.dev \
+          --agree-tos
 
-    # Order certificate (only if new or close to expiry)
-    - uses: az-acme/az-acme-cli@v1
-      with:
-        verb: order
-        args: >- 
-            --server https://acme-v02.api.letsencrypt.org/directory
-            --key-vault-uri https://<kvname>.vault.azure.net/     
-            --account-secret lets-encrypt-registration
-            --dns-zone /subscriptions/xxxxx/resourceGroups/xxxxxxx/providers/Microsoft.Network/dnszones/azacme.dev
-            --certificate wildcard-demo-azacme-dev
-            --subject *.demo.azacme.dev
+    - name: Order or Renew
+      run: |
+        az-acme order \
+          --server https://acme-staging-v02.api.letsencrypt.org/directory \
+          --key-vault-uri https://kvazacmedev.vault.azure.net/ \
+          --account-secret letsencrypt-stg-registration \
+          --certificate wild-demo-certificate \
+          --subject *.demo.azacme.dev \
+          --dns-provider Azure \
+          --azure-dns-zone /subscriptions/xxxx/resourceGroups/xxxx/providers/Microsoft.Network/dnszones/demo.azacme.dev \
+          --renew-within-days 30
+
             
 ```
 
