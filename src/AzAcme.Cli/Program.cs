@@ -118,31 +118,42 @@ namespace AzAcmi
 
         static async Task<RegistrationCommand> BuildRegistrationCommand(ILogger logger, RegistrationOptions options)
         {
-            // Azure Credentials.
-            var azureCreds = CreateDefaultAzureCredentials();
-
-            // Key Vault Related
-            var kvSecretClient = new SecretClient(options.KeyVaultUri, azureCreds);
-            ISecretStore secretStore = new AzureKeyVaultSecretStore(logger, kvSecretClient);
-            IScopedSecret registrationSecret = await secretStore.CreateScopedSecret(options.AccountSecretName);
-
-            // Environment Variables
-            var envResolver = new EnvironmentVariableResolver(logger, secretStore, Environment.GetEnvironmentVariables());
-            var ok = envResolver.Parse(options.EnvFromSecrets);
-
-            if (!ok)
+            return await AnsiConsole.Status().StartAsync<RegistrationCommand>("Validating credentials and dependencies", async ctx =>
             {
-                throw new ConfigurationException("Error parsing Environment to Secret values. Exiting for safety.");
-            }
+                logger.LogDebug("Loading Azure Credentials from environment...");
+                ctx.Status("Loading Azure Credentials...");
 
-            // directory
-            var certesConfiguration = new CertesAcmeConfiguration(options.Server);
-            IAcmeDirectory acmeProvider = new CertesAcmeProvider(logger, registrationSecret, certesConfiguration);
+                // Azure Credentials.
+                var azureCreds = CreateDefaultAzureCredentials();
 
-            // command
-            var rc = new RegistrationCommand(logger, envResolver, acmeProvider);
 
-            return rc;
+                ctx.Status("Creating Key Vault Clients...");
+
+                // Key Vault Related
+                logger.LogDebug("Creating Azure Key Vault secret client...");
+                var kvSecretClient = new SecretClient(options.KeyVaultUri, azureCreds);
+                ISecretStore secretStore = new AzureKeyVaultSecretStore(logger, kvSecretClient);
+                IScopedSecret registrationSecret = await secretStore.CreateScopedSecret(options.AccountSecretName);
+
+                // Environment Variables
+                var envResolver = new EnvironmentVariableResolver(logger, secretStore, Environment.GetEnvironmentVariables());
+                var ok = envResolver.Parse(options.EnvFromSecrets);
+
+                if (!ok)
+                {
+                    throw new ConfigurationException("Error parsing Environment to Secret values. Exiting for safety.");
+                }
+
+                // ACME Directory
+                logger.LogDebug("Creating ACME provider instance...");
+                var certesConfiguration = new CertesAcmeConfiguration(options.Server);
+                IAcmeDirectory acmeProvider = new CertesAcmeProvider(logger, registrationSecret, certesConfiguration);
+
+                // command
+                var rc = new RegistrationCommand(logger, envResolver, acmeProvider);
+
+                return rc;
+            });
         }
 
         static DefaultAzureCredential CreateDefaultAzureCredentials()

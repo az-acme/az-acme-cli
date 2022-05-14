@@ -3,6 +3,7 @@ using AzAcme.Cli.Util;
 using AzAcme.Core;
 using AzAcme.Core.Providers.Models;
 using Microsoft.Extensions.Logging;
+using Spectre.Console;
 
 namespace AzAcme.Cli.Commands
 {
@@ -21,9 +22,15 @@ namespace AzAcme.Cli.Commands
             var eabKid = await this.Resolve(()=>opts.EabKid, EnvironmentVariables.AZ_ACME_EAB_KID);
             var eabkey = await this.Resolve(() => opts.EabHmacKey, EnvironmentVariables.AZ_ACME_EAB_KEY);
 
+            if (opts.ForceRegistration)
+            {
+                this.logger.LogInformation("Forcing new registration...");
+            }
+
             if (!string.IsNullOrEmpty(eabKid)
                 && !string.IsNullOrEmpty(eabkey))
             {
+                this.logger.LogInformation("Using Extended Account Binding...");
                 registration = new AcmeRegistration(opts.AccountEmailAddress,
                                                             opts.AgreeTermsOfService,
                                                             ExternalAccountBindingAlgorithms.HS256, // only support this for now.
@@ -33,6 +40,7 @@ namespace AzAcme.Cli.Commands
             }
             else
             {
+                
                 registration = new AcmeRegistration(opts.AccountEmailAddress,
                                                             opts.AgreeTermsOfService,
                                                             opts.ForceRegistration);
@@ -40,6 +48,8 @@ namespace AzAcme.Cli.Commands
 
             // register
             _ = await this.acmeDirectory.Register(registration);
+
+            AnsiConsole.MarkupLine("[green]Successfully completed.[/]");
 
             return 0;
         }
