@@ -42,7 +42,7 @@ namespace AzAcme.Cli.Commands.Options
         [Option("force-order", HelpText = "Force order / renewal even if not expiring soon.")]
         public bool ForceOrder { get; set; } = false;
 
-        [Option("prop-delay", Required = false, Default = 0, HelpText = "Additional delay seconds after creating DNS challenge TXT record.")]
+        [Option("prop-delay", Required = false, Default = 6, HelpText = "Additional delay seconds after creating DNS challenge TXT record.")]
         public int PropDelay { get; set; }
 
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.

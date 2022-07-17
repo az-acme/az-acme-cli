@@ -71,12 +71,16 @@ namespace AzAcme.Cli.Commands
                 var attempts = 12;
                 var delaySeconds = 5;
 
+                if (opts.PropDelay != 0)
+                {
+                     this.logger.LogInformation("Waiting additional {0} seconds.", opts.PropDelay);
+                     Thread.Sleep(opts.PropDelay * 1000);
+                }
+
                 this.logger.LogInformation("Waiting for DNS records to be verified.");
 
                 // Wait while showing live update table.
                 await this.WaitForVerificationWithTable(order, acmeDirectory, attempts, delaySeconds);
-
-                System.Threading.Thread.Sleep(opts.PropDelay);
 
                 var validated = order.Challenges.All(x => x.Status == DnsChallenge.DnsChallengeStatus.Validated);
 
@@ -104,12 +108,12 @@ namespace AzAcme.Cli.Commands
                 {
                     AnsiConsole.MarkupLine("[red]DNS challenge verification failed.[/]");
                 }
-                this.logger.LogInformation("Cleaning up DNZ Zone Records.");
+                this.logger.LogInformation("Cleaning up DNS Zone Records.");
                 await dnsZone.RemoveTxtRecords(order);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                this.logger.LogInformation("Exception: Cleaning up DNZ Zone Records.");
+                this.logger.LogInformation("[red]Exception: Cleaning up DNS Zone Records.[/]");
                 await dnsZone.RemoveTxtRecords(order);
                 throw;
             }
