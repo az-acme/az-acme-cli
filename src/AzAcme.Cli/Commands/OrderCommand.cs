@@ -108,14 +108,11 @@ namespace AzAcme.Cli.Commands
                 {
                     AnsiConsole.MarkupLine("[red]DNS challenge verification failed.[/]");
                 }
+            }
+            finally
+            {
                 this.logger.LogInformation("Cleaning up DNS Zone Records.");
                 await dnsZone.RemoveTxtRecords(order);
-            }
-            catch (Exception)
-            {
-                this.logger.LogInformation("[red]Exception: Cleaning up DNS Zone Records.[/]");
-                await dnsZone.RemoveTxtRecords(order);
-                throw;
             }
             return retval;
         }
