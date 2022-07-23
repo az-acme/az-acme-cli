@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AzAcme.Cli.UnitTests", "tes
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AzAcme.UnitTests", "test\AzAcme.UnitTests\AzAcme.UnitTests.csproj", "{0ED50160-7A93-4185-97F1-4665461B6EB1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AzAcme.Core.UnitTests", "test\AzAcme.Core.UnitTests\AzAcme.Core.UnitTests.csproj", "{2EAF8956-0305-4C84-A772-EE4DD9B8125C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -37,6 +39,10 @@ Global
 		{0ED50160-7A93-4185-97F1-4665461B6EB1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0ED50160-7A93-4185-97F1-4665461B6EB1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0ED50160-7A93-4185-97F1-4665461B6EB1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2EAF8956-0305-4C84-A772-EE4DD9B8125C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2EAF8956-0305-4C84-A772-EE4DD9B8125C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2EAF8956-0305-4C84-A772-EE4DD9B8125C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2EAF8956-0305-4C84-A772-EE4DD9B8125C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -46,6 +52,7 @@ Global
 		{EEEFBF10-AE29-4BDF-9493-37FF30875092} = {5E3EAEB6-4704-437D-B348-895C684B2CFA}
 		{1ED97921-BEDF-4F6B-9525-8F02B8576A3E} = {15F46FD9-44FA-45A9-A1FB-314846CADE8F}
 		{0ED50160-7A93-4185-97F1-4665461B6EB1} = {15F46FD9-44FA-45A9-A1FB-314846CADE8F}
+		{2EAF8956-0305-4C84-A772-EE4DD9B8125C} = {15F46FD9-44FA-45A9-A1FB-314846CADE8F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0CF10D46-A83D-4644-96A7-94780996418B}

@@ -1,4 +1,5 @@
 ﻿using AzAcme.Core.Exceptions;
+using AzAcme.Core.Providers.Helpers;
 using AzAcme.Core.Providers.Models;
 using Microsoft.Azure.Management.Dns;
 using Microsoft.Azure.Management.Dns.Models;
@@ -29,7 +30,7 @@ namespace AzAcme.Core.Providers.AzureDns
             // determine the TXT records needed first, so we validate all before applying.
             foreach(var challenge in order.Challenges)
             {
-                var record = DetermineTxtRecordName(challenge.Identitifer);
+                var record = DnsHelpers.DetermineTxtRecordName(challenge.Identitifer, this.zoneName);
                 challenge.SetRecordName(record);
             }
 
@@ -53,40 +54,22 @@ namespace AzAcme.Core.Providers.AzureDns
             return order;
         }
 
-        private string DetermineTxtRecordName(string identifier)
-        {
-            if (!identifier.EndsWith(zoneName))
-            {
-                throw new ConfigurationException("Invalid DNS Zone. All Subjects and SANs must be part of the same DNS Zone.");
-            }
-
-            if (identifier.StartsWith("*."))
-            {
-                identifier = identifier.Substring(2);
-            }
-
-            var remaining = identifier.Substring(0, identifier.Length - zoneName.Length).TrimEnd('.');
-            var recordName = "_acme-challenge";
-            if (remaining.Length > 0)
-            {
-                recordName = recordName + "." + remaining;
-            }
-
-            return recordName;
-        }
-
         private async Task RemoveTxtRecord(DnsChallenge challenge)
         {
-            var recordSet = await client.RecordSets.GetAsync(azureDnsResource.ResourceGroupName, azureDnsResource.Name, challenge.TxtRecord, RecordType.TXT);
+            // Load all then filter
+            var recordSets = await client.RecordSets.ListByTypeAsync(azureDnsResource.ResourceGroupName, azureDnsResource.Name, Microsoft.Azure.Management.Dns.Models.RecordType.TXT);
 
-            if (recordSet != null)
+            // ReSharper disable once ReplaceWithSingleCallToFirstOrDefault
+            var records = recordSets.Where(x => x.Name == challenge.TxtRecord).FirstOrDefault();
+            
+            if (records == null)
             {
-                this.logger.LogDebug("Removing TXT record set '{0}'.", challenge.TxtRecord);
-                await client.RecordSets.DeleteAsync(azureDnsResource.ResourceGroupName, azureDnsResource.Name, challenge.TxtRecord, RecordType.TXT);
+                this.logger.LogDebug("No TXT record set for '{0}' found. Skipping delete.", challenge.TxtRecord);
             }
             else
             {
-                this.logger.LogDebug("No TXT record set for '{0}' found. Skipping delete.", challenge.TxtRecord);
+                this.logger.LogDebug("Removing TXT record set '{0}'.", challenge.TxtRecord);
+                await client.RecordSets.DeleteAsync(azureDnsResource.ResourceGroupName, azureDnsResource.Name, challenge.TxtRecord, RecordType.TXT);
             }
         }
 
@@ -94,6 +77,7 @@ namespace AzAcme.Core.Providers.AzureDns
         {
             var recordSets = await client.RecordSets.ListByTypeAsync(azureDnsResource.ResourceGroupName, azureDnsResource.Name, Microsoft.Azure.Management.Dns.Models.RecordType.TXT);
 
+            // ReSharper disable once ReplaceWithSingleCallToFirstOrDefault
             var records = recordSets.Where(x => x.Name == challenge.TxtRecord).FirstOrDefault();
 
             if (records == null)

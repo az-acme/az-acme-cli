@@ -18,9 +18,9 @@ using System.Text;
 
 namespace AzAcmi
 {
-    class Program
+    public class Program
     {
-        static async Task<int> Main(string[] args)
+        public static async Task<int> Main(string[] args)
         {
             Console.OutputEncoding = Encoding.UTF8;
 
@@ -46,12 +46,22 @@ namespace AzAcmi
                     },
                     errs => Task.FromResult(DisplayHelp(parser)));
             }
+            catch (ProviderException ex)
+            {
+                console.MarkupLine("[red]{0}[/]",ex.Message);
+                if (verbose)
+                {
+                    throw;
+                }
+                
+                return 1;
+            }
             catch(ConfigurationException ex)
             {
                 console.MarkupLine("[red]{0}[/]",ex.Message);
                 if (verbose)
                 {
-                    logger.LogError(ex, ex.Message);
+                    throw;
                 }
                 return 1;
             }
