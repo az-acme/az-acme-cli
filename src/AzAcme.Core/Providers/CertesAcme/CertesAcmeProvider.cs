@@ -24,43 +24,50 @@ namespace AzAcme.Core.Providers.CertesAcme
 
         public async Task<IAcmeCredential> Register(AcmeRegistration registration)
         {
-            if(registration.Force || false == await this.registrationSecret.Exists())
+            try
             {
-                this.logger.LogInformation("Registering with provider...");
-
-                if (string.IsNullOrEmpty(registration.Email))
+                if(registration.Force || false == await this.registrationSecret.Exists())
                 {
-                    throw new ConfigurationException("Registration Email Address must be set for registration");
-                }
+                    this.logger.LogInformation("Registering with provider...");
 
-                if (!registration.AcceptTermsOfService)
-                {
-                    throw new ConfigurationException("Terms of service must be accepted before registration");
-                }
+                    if (string.IsNullOrEmpty(registration.Email))
+                    {
+                        throw new ConfigurationException("Registration Email Address must be set for registration");
+                    }
 
-                var context = new AcmeContext(configuration.Directory);
+                    if (!registration.AcceptTermsOfService)
+                    {
+                        throw new ConfigurationException("Terms of service must be accepted before registration");
+                    }
 
-                // use EAB if we need to.
-                if(registration.EabKeyId != null
-                    && registration.EabKey != null)
-                {
-                    _ = await context.NewAccount(registration.Email, termsOfServiceAgreed: true, registration.EabKeyId, registration.EabKey, registration.EabAlgorithm.ToString());
+                    var context = new AcmeContext(configuration.Directory);
+
+                    // use EAB if we need to.
+                    if(registration.EabKeyId != null
+                        && registration.EabKey != null)
+                    {
+                        _ = await context.NewAccount(registration.Email, termsOfServiceAgreed: true, registration.EabKeyId, registration.EabKey, registration.EabAlgorithm.ToString());
+                    }
+                    else
+                    {
+                        _ = await context.NewAccount(registration.Email, termsOfServiceAgreed: true);
+                    }
+                    
+                    var credential = context.AccountKey.ToPem();
+
+                    await this.registrationSecret.CreateOrUpdate(credential);
                 }
                 else
                 {
-                    _ = await context.NewAccount(registration.Email, termsOfServiceAgreed: true);
+                    this.logger.LogInformation("Alredy registered. Use '--force-registration' or remove the account secret from Key Vault to re-register.");
                 }
-                
-                var credential = context.AccountKey.ToPem();
 
-                await this.registrationSecret.CreateOrUpdate(credential);
+                return await Login();
             }
-            else
+            catch (Certes.AcmeRequestException e)
             {
-                this.logger.LogInformation("Alredy registered. Use '--force-registration' or remove the account secret from Key Vault to re-register.");
+                throw new ProviderException(e.Error.Detail, e);
             }
-
-            return await Login();
         }
 
         public async Task<IAcmeCredential> Login()
@@ -77,34 +84,43 @@ namespace AzAcme.Core.Providers.CertesAcme
 
         public async Task<Order> Order(IAcmeCredential credential, CertificateRequest certificateRequest)
         {
-            var creds = credential as CertesAcmeCredential;
-
-            if(creds == null)
+            try
             {
-                throw new ArgumentException($"Expecting to be of type {typeof(CertesAcmeCredential).Name} but was {credential.GetType().Name}", nameof(credential));
+                var creds = credential as CertesAcmeCredential;
+
+                if (creds == null)
+                {
+                    throw new ArgumentException(
+                        $"Expecting to be of type {typeof(CertesAcmeCredential).Name} but was {credential.GetType().Name}",
+                        nameof(credential));
+                }
+
+                var pem = KeyFactory.FromPem(creds.Pem);
+                var acmeContext = new AcmeContext(this.configuration.Directory, pem);
+
+                var all = new List<string>();
+                all.Add(certificateRequest.Subject);
+                all.AddRange(certificateRequest.SubjectAlternativeNames);
+
+                var newOrder = await acmeContext.NewOrder(all);
+
+                var order = new CertesAcmeOrder(newOrder);
+
+                foreach (var identifier in all)
+                {
+                    var auth = await newOrder.Authorization(identifier);
+                    var dns = await auth.Dns();
+                    var dnsTxt = acmeContext.AccountKey.DnsTxt(dns.Token);
+
+                    order.Challenges.Add(new DnsChallenge(identifier, dnsTxt));
+                }
+
+                return order;
             }
-
-            var pem = KeyFactory.FromPem(creds.Pem);
-            var acmeContext = new AcmeContext(this.configuration.Directory,pem);
-
-            var all = new List<string>();
-            all.Add(certificateRequest.Subject);
-            all.AddRange(certificateRequest.SubjectAlternativeNames);
-
-            var newOrder = await acmeContext.NewOrder(all);
-
-            var order = new CertesAcmeOrder(newOrder);
-
-            foreach (var identifier in all)
+            catch (Certes.AcmeRequestException e)
             {
-                var auth = await newOrder.Authorization(identifier);
-                var dns = await auth.Dns();
-                var dnsTxt = acmeContext.AccountKey.DnsTxt(dns.Token);
-
-                order.Challenges.Add(new DnsChallenge(identifier, dnsTxt));
+                throw new ProviderException(e.Error.Detail, e);
             }
-
-            return order;
         }
 
         public async Task<Order> ValidateChallenges(Order order)
