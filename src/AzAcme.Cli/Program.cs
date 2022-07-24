@@ -94,6 +94,12 @@ namespace AzAcmi
                     throw new ConfigurationException("Error parsing Environment to Secret values. Exiting for safety.");
                 }
 
+                if (options.VerificationTimeoutSeconds < 30)
+                {
+                    logger.LogWarning("Overriding verification timeout to minimum value (30 seconds).");
+                    options.VerificationTimeoutSeconds = 30;
+                }
+
                 // Key Vault Certificates
                 logger.LogDebug("Creating Azure Key Vault certificate client...");
                 var kvCertificateClient = new CertificateClient(options.KeyVaultUri, azureCreds);
