@@ -1,4 +1,6 @@
-﻿using Azure.Security.KeyVault.Secrets;
+﻿using System.Text.RegularExpressions;
+using AzAcme.Core.Exceptions;
+using Azure.Security.KeyVault.Secrets;
 using Microsoft.Extensions.Logging;
 
 namespace AzAcme.Core.Providers.KeyVault
@@ -14,11 +16,26 @@ namespace AzAcme.Core.Providers.KeyVault
             this.client = client ?? throw new ArgumentNullException(nameof(client));
         }
 
-        public Task<IScopedSecret> CreateScopedSecret(string name)
+        public Task ValidateSecretName(string name)
         {
+            const string regex = "^[A-Za-z0-9-]+$";
+
+            if (!Regex.IsMatch(name, regex))
+            {
+                throw new ConfigurationException($"Key Vault Certificate '{name}' invalid. Should be alphanumeric and dashes only.");
+            }
+            
+            return Task.CompletedTask;
+        }
+        
+        public async Task<IScopedSecret> CreateScopedSecret(string name)
+        {
+            // ensure validation has occured.
+            await ValidateSecretName(name);
+            
             IScopedSecret ss = new AzureKeyVaultScopedSecret(this.client, name);
 
-            return Task.FromResult(ss);
+            return ss;
         }
 
         internal class AzureKeyVaultScopedSecret : IScopedSecret

@@ -2,6 +2,8 @@
 {
     public interface ISecretStore
     {
+        Task ValidateSecretName(string name);
+        
         Task<IScopedSecret> CreateScopedSecret(string name);
     }
 }
