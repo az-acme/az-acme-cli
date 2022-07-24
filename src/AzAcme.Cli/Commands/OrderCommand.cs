@@ -64,47 +64,66 @@ namespace AzAcme.Cli.Commands
             
             this.logger.LogInformation("Updating DNS challenge records.");
             await dnsZone.SetTxtRecords(order);
-
-            // allow up to 1 minute
-            var attempts = 12;
-            var delaySeconds = 5;
-
-            this.logger.LogInformation("Waiting for DNS records to be verified.");
-
-            // Wait while showing live update table.
-            await this.WaitForVerificationWithTable(order, acmeDirectory, attempts, delaySeconds);
-
-            var validated = order.Challenges.All(x => x.Status == DnsChallenge.DnsChallengeStatus.Validated);
-
-            if (validated)
+            
+            var delaySeconds = 5; // time in the loop
+            var attempts = opts.VerificationTimeoutSeconds / delaySeconds;
+            
+            // work out total attempts. If needed add extra attempt so we wait
+            // at least the verification timeout duration.
+            if ((attempts * delaySeconds) < opts.VerificationTimeoutSeconds)
             {
-                this.logger.LogInformation("DNS challenges successfully validated.");
+                attempts++;
+            }
+            
+            // total time that will be waited.
+            var totalTime = attempts * delaySeconds;
+            
+            this.logger.LogInformation($"Waiting for DNS records to be verified (up to {totalTime} seconds).");
 
-                this.logger.LogInformation("Preparing Certificate CSR in Azure Key Vault.");
-                var csr = await certificateStore.Prepare(certificateRequest);
+            try
+            {
+                // Wait while showing live update table.
+                await this.WaitForVerificationWithTable(order, acmeDirectory, attempts, delaySeconds);
 
-                this.logger.LogInformation("Finalising the order with ACME provider using generated CSR.");
-                var chain = await acmeDirectory.Finalise(order, csr);
+                var validated = order.Challenges.All(x => x.Status == DnsChallenge.DnsChallengeStatus.Validated);
 
-                this.logger.LogInformation("Completing the merge of CSR with ACME generated certificate chain.");
-                await certificateStore.Complete(certificateRequest, chain);
+                if (validated)
+                {
+                    this.logger.LogInformation("DNS challenges successfully validated.");
 
-                this.logger.LogInformation("Certificate successfully ordered and merged into Azure Key Vault.");
+                    this.logger.LogInformation("Preparing Certificate CSR in Azure Key Vault.");
+                    var csr = await certificateStore.Prepare(certificateRequest);
 
-                this.logger.LogInformation("Cleaning up DNZ Zone Records.");
-                await dnsZone.RemoveTxtRecords(order);
+                    this.logger.LogInformation("Finalising the order with ACME provider using generated CSR.");
+                    var chain = await acmeDirectory.Finalise(order, csr);
 
-                AnsiConsole.MarkupLine("[green]Successfully completed order process.[/]");
-                return 0;
+                    this.logger.LogInformation("Completing the merge of CSR with ACME generated certificate chain.");
+                    await certificateStore.Complete(certificateRequest, chain);
+
+                    this.logger.LogInformation("Certificate successfully ordered and merged into Azure Key Vault.");
+
+                    AnsiConsole.MarkupLine("[green]Successfully completed order process.[/]");
+                    return 0;
+                }
+                else
+                {
+                    AnsiConsole.MarkupLine("[red]DNS challenge verification failed.[/]");
+                    return 1;
+                }
+            }
+            finally
+            {
+                try
+                {
+                    this.logger.LogInformation("Cleaning up DNZ Zone Records.");
+                    await dnsZone.RemoveTxtRecords(order);
+                }
+                catch(Exception ex)
+                {
+                    this.logger.LogError(ex,"Error cleaning up DNZ Zone Records. Ignoring.");
+                }
                 
             }
-            else
-            {
-                AnsiConsole.MarkupLine("[red]DNS challenge verification failed.[/]");
-                return 1;
-            }
-
-            
         }
 
         private async Task WaitForVerificationWithTable(Order order, IAcmeDirectory directory, int attempts, int delaySeconds)

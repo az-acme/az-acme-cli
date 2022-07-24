@@ -42,6 +42,9 @@ namespace AzAcme.Cli.Commands.Options
         [Option("force-order", HelpText = "Force order / renewal even if not expiring soon.")]
         public bool ForceOrder { get; set; } = false;
 
+        [Option("verification-timeout-seconds", Required = false, Default = 60, HelpText = "Challenge verification timout in seconds.")]
+        public int VerificationTimeoutSeconds { get; set; }
+        
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
 

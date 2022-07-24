@@ -137,18 +137,31 @@ namespace AzAcme.Core.Providers.CertesAcme
                 // only need to do anything if challenge is pending.
                 if (challenge.Status == DnsChallenge.DnsChallengeStatus.Pending)
                 {
-                    var auth = await certesOrder.Context.Authorization(challenge.Identitifer);
-                    await (await auth.Dns()).Validate();
-
-                    var res = await auth.Resource();
-
-                    if (res.Status == Certes.Acme.Resource.AuthorizationStatus.Valid)
+                    try
                     {
-                        challenge.SetStatus(DnsChallenge.DnsChallengeStatus.Validated);
+                        var auth = await certesOrder.Context.Authorization(challenge.Identitifer);
+                        await (await auth.Dns()).Validate();
+
+                        var res = await auth.Resource();
+
+                        if (res.Status == Certes.Acme.Resource.AuthorizationStatus.Valid)
+                        {
+                            challenge.SetStatus(DnsChallenge.DnsChallengeStatus.Validated);
+                        }
+                        else if (res.Status == Certes.Acme.Resource.AuthorizationStatus.Invalid)
+                        {
+                            challenge.SetStatus(DnsChallenge.DnsChallengeStatus.Failed);
+                        }
                     }
-                    else if (res.Status == Certes.Acme.Resource.AuthorizationStatus.Invalid)
+                    catch (AcmeRequestException ex)
                     {
-                        challenge.SetStatus(DnsChallenge.DnsChallengeStatus.Failed);
+                        logger.LogDebug(ex.Message);
+                        // we'll ignore the exception, we may get some transient
+                        // exceptions based on the state of the order within the
+                        // provider in some cases.
+                        
+                        // The looping will naturally end should the errors exceed the
+                        // time allowed.
                     }
                 }                
             }
