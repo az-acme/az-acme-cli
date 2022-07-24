@@ -1,4 +1,6 @@
-﻿using AzAcme.Core.Providers.Models;
+﻿using System.Text.RegularExpressions;
+using AzAcme.Core.Exceptions;
+using AzAcme.Core.Providers.Models;
 using Azure;
 using Azure.Security.KeyVault.Certificates;
 using Microsoft.Extensions.Logging;
@@ -30,6 +32,17 @@ namespace AzAcme.Core.Providers.KeyVault
             return Task.FromResult(info);
         }
 
+        public Task ValidateCertificateName(string name)
+        {
+            const string regex = "^[A-Za-z0-9-]+$";
+
+            if (!Regex.IsMatch(name, regex))
+            {
+                throw new ConfigurationException($"Key Vault Certificate '{name}' invalid. Should be alphanumeric and dashes only.");
+            }
+            
+            return Task.CompletedTask;
+        }
         public async Task<CertificateCsr> Prepare(CertificateRequest request)
         {
             const string IssuerName = "Unknown"; // always same for externally managed lifecycles in azure.

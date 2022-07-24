@@ -1,6 +1,7 @@
 ﻿using AzAcme.Cli.Commands.Options;
 using AzAcme.Cli.Util;
 using AzAcme.Core;
+using AzAcme.Core.Exceptions;
 using AzAcme.Core.Extensions;
 using AzAcme.Core.Providers.Models;
 using Microsoft.Extensions.Logging;
@@ -27,6 +28,10 @@ namespace AzAcme.Cli.Commands
 
         protected override async Task<int> OnExecute(OrderOptions opts)
         {
+            // check the name is valid first.
+            await certificateStore.ValidateCertificateName(opts.Certificate);
+            
+            Console.WriteLine(opts.Certificate);
             var certificateRequest = new CertificateRequest(opts.Certificate, opts.Subject, opts.SubjectAlternativeNames);
 
             this.logger.LogInformation("Loading metadata from certificate store for certificate '{0}'.", opts.Certificate);
