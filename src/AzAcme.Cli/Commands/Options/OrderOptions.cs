@@ -21,17 +21,20 @@ namespace AzAcme.Cli.Commands.Options
         [Option("renew-within-days", Required = false, Default = 30, HelpText = "Renew within days before expiry.")]
         public int RenewWithinDays { get; set; }
 
+        private string _subject = "";
         [Option("subject", Required = true, HelpText = "Subject name of the certificate, such as 'foo.example.com'.")]
-        public string Subject { get; set; }
+        public string Subject { get => _subject; set { _subject = value.TrimEnd(new char[] { '\n', '\r' }); } }
 
         [Option("dns-provider", Required = true, Default = DnsProviders.Azure, HelpText = "DNS provider for challenges.")]
         public DnsProviders DnsProvider { get; set; }
 
+        private string _dnsZone = "";
         [Option("azure-dns-zone", Required = false, HelpText = "Resource ID for Azure DNS Zone to use for challenge.")]
-        public string DnsZoneResourceId { get; set; }
+        public string DnsZoneResourceId { get => _dnsZone; set { _dnsZone = value.TrimEnd(new char[] { '\n', '\r' }); } }
 
+        private string[] _sans;
         [Option("sans", Required = false, Separator = ' ', HelpText = "Subjet Alternative Names (SANs) space separated.")]
-        public IList<string> SubjectAlternativeNames { get; set; }
+        public IList<string> SubjectAlternativeNames { get => _sans; set { _sans = value.Select(v => v.TrimEnd(new char[] { '\n', '\r' })).ToArray(); } }
         
         [Option("aad-tenant", Required = false, HelpText = "Explicitly set AAD Tenant ID for obtaining JWT token for Azure DNS API.")]
         public string? AadTenantId { get; set; } = null;
