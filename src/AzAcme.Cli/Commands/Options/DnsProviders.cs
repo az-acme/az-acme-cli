@@ -8,6 +8,7 @@ namespace AzAcme.Cli.Commands.Options
 {
     public enum DnsProviders
     {
-        Azure
+        Azure,
+        AzurePrivate
     }
 }
