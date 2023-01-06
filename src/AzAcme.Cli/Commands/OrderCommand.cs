@@ -88,7 +88,7 @@ namespace AzAcme.Cli.Commands
             try
             {
                 // Wait while showing live update table.
-                await this.WaitForVerificationWithTable(order, acmeDirectory, attempts, delaySeconds);
+                await this.WaitForVerificationWithTable(order, acmeDirectory, attempts, delaySeconds, opts);
 
                 var validated = order.Challenges.All(x => x.Status == DnsChallenge.DnsChallengeStatus.Validated);
 
@@ -131,38 +131,54 @@ namespace AzAcme.Cli.Commands
             }
         }
 
-        private async Task WaitForVerificationWithTable(Order order, IAcmeDirectory directory, int attempts, int delaySeconds)
+        private async Task WaitForVerificationWithTable(Order order, IAcmeDirectory directory, int attempts, int delaySeconds, OrderOptions opts)
         {
-            var table = order.ToTable();
-            await AnsiConsole.Live(table)
-            .StartAsync(async ctx =>
+            if (opts.DisableLiveTable)
             {
-                ctx.Refresh();
+                // Workaround for Azure DevOps pipeline. AnsiConsole.Live throws an exception. 
+                this.logger.LogDebug("LiveTable is disabled.");
 
-                int attempt = 1;
-                while (attempt <= attempts)
+                var table = order.ToTable();
+                AnsiConsole.Write(table);
+                await directory.ValidateChallenges(order);
+                table.Rows.Clear();
+                foreach (var item in order.Challenges)
                 {
-                    await directory.ValidateChallenges(order);
-
-                    table.Rows.Clear();
-                    foreach (var item in order.Challenges)
-                    {
-                        table.AddRow(item.Identitifer, item.TxtRecord ?? "-", item.TxtValue, item.Status.ToString());
-                    }
+                    table.AddRow(item.Identitifer, item.TxtRecord ?? "-", item.TxtValue, item.Status.ToString());
+                }
+                AnsiConsole.Write(table);
+            }
+            else
+            {
+                var table = order.ToTable();
+                await AnsiConsole.Live(table)
+                .StartAsync(async ctx =>
+                {
                     ctx.Refresh();
 
-                    if (order.Challenges.All(x => x.Status == DnsChallenge.DnsChallengeStatus.Validated
-                        || order.Challenges.All(x => x.Status == DnsChallenge.DnsChallengeStatus.Failed)))
+                    int attempt = 1;
+                    while (attempt <= attempts)
                     {
-                        break;
+                        await directory.ValidateChallenges(order);
+
+                        table.Rows.Clear();
+                        foreach (var item in order.Challenges)
+                        {
+                            table.AddRow(item.Identitifer, item.TxtRecord ?? "-", item.TxtValue, item.Status.ToString());
+                        }
+                        ctx.Refresh();
+
+                        if (order.Challenges.All(x => x.Status == DnsChallenge.DnsChallengeStatus.Validated
+                            || order.Challenges.All(x => x.Status == DnsChallenge.DnsChallengeStatus.Failed)))
+                        {
+                            break;
+                        }
+
+                        await Task.Delay(delaySeconds * 1000);
+                        attempt++;
                     }
-
-                    await Task.Delay(delaySeconds * 1000);
-                    attempt++;
-                }
-            });
-
+                });
+            }
         }
-
     }
 }
