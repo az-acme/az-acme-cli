@@ -149,6 +149,7 @@ namespace AzAcme.Cli.Commands
                     {
                         table.AddRow(item.Identitifer, item.TxtRecord ?? "-", item.TxtValue, item.Status.ToString());
                     }
+                    AnsiConsole.Write(table);
 
                     if (order.Challenges.All(x => x.Status == DnsChallenge.DnsChallengeStatus.Validated
                         || order.Challenges.All(x => x.Status == DnsChallenge.DnsChallengeStatus.Failed)))
@@ -158,7 +159,6 @@ namespace AzAcme.Cli.Commands
                     await Task.Delay(delaySeconds * 1000);
                     attempt++;
                 }
-                AnsiConsole.Write(table);
             }
             else
             {
