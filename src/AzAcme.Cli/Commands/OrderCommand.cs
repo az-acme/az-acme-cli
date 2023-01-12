@@ -140,11 +140,23 @@ namespace AzAcme.Cli.Commands
 
                 var table = order.ToTable();
                 AnsiConsole.Write(table);
-                await directory.ValidateChallenges(order);
-                table.Rows.Clear();
-                foreach (var item in order.Challenges)
+                int attempt = 1;
+                while (attempt <= attempts)
                 {
-                    table.AddRow(item.Identitifer, item.TxtRecord ?? "-", item.TxtValue, item.Status.ToString());
+                    await directory.ValidateChallenges(order);
+                    table.Rows.Clear();
+                    foreach (var item in order.Challenges)
+                    {
+                        table.AddRow(item.Identitifer, item.TxtRecord ?? "-", item.TxtValue, item.Status.ToString());
+                    }
+
+                    if (order.Challenges.All(x => x.Status == DnsChallenge.DnsChallengeStatus.Validated
+                        || order.Challenges.All(x => x.Status == DnsChallenge.DnsChallengeStatus.Failed)))
+                    {
+                        break;
+                    }
+                    await Task.Delay(delaySeconds * 1000);
+                    attempt++;
                 }
                 AnsiConsole.Write(table);
             }
