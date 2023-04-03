@@ -47,7 +47,10 @@ namespace AzAcme.Cli.Commands.Options
 
         [Option("verification-timeout-seconds",   Required = false, Default = 60, HelpText = "Challenge verification timout in seconds.")]
         public int VerificationTimeoutSeconds { get; set; }
-        
+
+        [Option("disable-livetable", HelpText = "Disable Live tables. Required for some Azuer DevOps pipelines.")]
+        public bool DisableLiveTable { get; set; } = false;
+
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
 
