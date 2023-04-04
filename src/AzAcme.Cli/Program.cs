@@ -110,7 +110,7 @@ namespace AzAcmi
                 var certesConfiguration = new CertesAcmeConfiguration(options.Server);
                 IAcmeDirectory acmeProvider = new CertesAcmeProvider(logger, registrationSecret, certesConfiguration);
 
-                ctx.Status("Creating Azure DNS Client...");
+                ctx.Status($"Creating {Enum.GetName(typeof(DnsProviders), options.DnsProvider)} DNS Client...");
 
                 // create using factory for future and to hide lazy logic.
                 var dns = DnsFactory.Create(logger,
@@ -120,7 +120,9 @@ namespace AzAcmi
                         AadTenantId = options.AadTenantId,
                         AzureCredential = azureCreds,
                         AzureDnsResourceId = options.DnsZoneResourceId,
-                        ZoneOverride = options.Zone
+                        ZoneOverride = options.Zone,
+                        CloudlfareZoneIdentifier = options.CloudlfareZoneIdentifier,
+                        CloudlfareApiToken = options.CloudlfareApiToken,
                     }
                 );
 

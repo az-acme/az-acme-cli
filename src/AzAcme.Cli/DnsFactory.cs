@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AzAcme.Core.Providers.CloudflareDns;
 
 namespace AzAcme.Cli
 {
@@ -26,6 +27,9 @@ namespace AzAcme.Cli
             public string? AzureDnsResourceId { get; set; }
             public string? AadTenantId { get; set; }
             public string? ZoneOverride { get; set; }
+            
+            public string? CloudlfareZoneIdentifier { get; set; }
+            public string? CloudlfareApiToken { get; set; }
         }
 
         public static IDnsZone Create(ILogger logger, DnsOptions options)
@@ -54,6 +58,23 @@ namespace AzAcme.Cli
 
                             return azureDns;
                         });
+
+                        return new LazyDnsZone(zone);
+                    }
+                case DnsProviders.Cloudflare:
+                    {
+                        if(string.IsNullOrEmpty(options.CloudlfareApiToken))
+                        {
+                            throw new ArgumentException("Cloudflare API Token must be set.");
+                        }
+
+                        if(string.IsNullOrEmpty(options.CloudlfareZoneIdentifier))
+                        {
+                            throw new ConfigurationException("Cloudflare Zone ID must be set.");
+                        }
+
+                        Lazy<IDnsZone> zone = new Lazy<IDnsZone>(() => 
+                            new CloudflareDnsZone(logger, options.CloudlfareApiToken, options.CloudlfareZoneIdentifier));
 
                         return new LazyDnsZone(zone);
                     }

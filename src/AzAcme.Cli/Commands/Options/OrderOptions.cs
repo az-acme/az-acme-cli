@@ -51,6 +51,12 @@ namespace AzAcme.Cli.Commands.Options
         [Option("disable-livetable", HelpText = "Disable Live tables. Required for some Azuer DevOps pipelines.")]
         public bool DisableLiveTable { get; set; } = false;
 
+        [Option("cf-zone-id", Required = false, HelpText = "Zone ID of the Cloudflare-Site. Required when using Cloudflare DNS provider.")]
+        public string CloudlfareZoneIdentifier { get; set; }
+        
+        [Option("cf-api-token", Required = false, HelpText = "Cloudflare API Token with permissions to modify DNS. Required when using Cloudflare DNS provider.")]
+        public string CloudlfareApiToken { get; set; }
+        
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
 
