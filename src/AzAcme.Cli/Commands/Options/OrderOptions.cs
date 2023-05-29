@@ -57,6 +57,10 @@ namespace AzAcme.Cli.Commands.Options
         [Option("cf-api-token", Required = false, HelpText = "Cloudflare API Token with permissions to modify DNS. Required when using Cloudflare DNS provider.")]
         public string CloudlfareApiToken { get; set; }
         
+
+        [Option("dns-lookup", Required = false, Default = "", HelpText = "DNS lookup server pre-defined name or custom IP address for challenge pre-validation.")]
+        public string DnsLookup { get; set; }
+        
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
 

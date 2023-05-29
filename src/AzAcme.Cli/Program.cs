@@ -14,7 +14,10 @@ using CommandLine.Text;
 using Microsoft.Extensions.Logging;
 using Spectre.Console;
 using System.Diagnostics;
+using System.Net;
 using System.Text;
+using AzAcme.Core.Providers;
+using DnsClient;
 
 namespace AzAcmi
 {
@@ -126,8 +129,20 @@ namespace AzAcmi
                     }
                 );
 
+                var dnsLookup = new DnsLookup(options.DnsLookup.ToLowerInvariant() switch
+                {
+                    "" => null,
+                    "google" => NameServer.GooglePublicDns,
+                    "google2" => NameServer.GooglePublicDns2,
+                    "cloudflare" => NameServer.Cloudflare,
+                    "cloudflare2" => NameServer.Cloudflare2,
+                    _ => IPEndPoint.TryParse(options.DnsLookup, out var nameServerIp)
+                        ? nameServerIp
+                        : throw new ConfigurationException("Error parsing DNS lookup server IP address.")
+                });
+
                 // command
-                var rc = new OrderCommand(logger, envResolver, certificateStore, acmeProvider, dns);
+                var rc = new OrderCommand(logger, envResolver, certificateStore, acmeProvider, dns, dnsLookup);
 
                 return rc;
             });
