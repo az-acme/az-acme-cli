@@ -1,7 +1,6 @@
 ﻿using AzAcme.Cli.Commands.Options;
 using AzAcme.Cli.Util;
 using AzAcme.Core;
-using AzAcme.Core.Exceptions;
 using AzAcme.Core.Extensions;
 using AzAcme.Core.Providers.Models;
 using Microsoft.Extensions.Logging;
@@ -14,16 +13,19 @@ namespace AzAcme.Cli.Commands
         private readonly ICertificateStore certificateStore;
         private readonly IAcmeDirectory acmeDirectory;
         private readonly IDnsZone dnsZone;
+        private readonly IDnsLookup dnsLookup;
 
         public OrderCommand(ILogger logger,
             EnvironmentVariableResolver environmentVariableResolver,
             ICertificateStore certificateStore,
             IAcmeDirectory acmeDirectory,
-            IDnsZone dnsZone) : base(logger, environmentVariableResolver)
+            IDnsZone dnsZone,
+            IDnsLookup dnsLookup) : base(logger, environmentVariableResolver)
         {
             this.certificateStore = certificateStore ?? throw new ArgumentNullException(nameof(certificateStore));
             this.acmeDirectory = acmeDirectory ?? throw new ArgumentNullException(nameof(acmeDirectory));
             this.dnsZone = dnsZone ?? throw new ArgumentNullException(nameof(dnsZone));
+            this.dnsLookup = dnsLookup ?? throw new ArgumentNullException(nameof(dnsLookup));
         }
 
         protected override async Task<int> OnExecute(OrderOptions opts)
@@ -143,7 +145,8 @@ namespace AzAcme.Cli.Commands
                 int attempt = 1;
                 while (attempt <= attempts)
                 {
-                    await directory.ValidateChallenges(order);
+                    await ValidateChallenges(directory, order);
+
                     table.Rows.Clear();
                     foreach (var item in order.Challenges)
                     {
@@ -171,7 +174,7 @@ namespace AzAcme.Cli.Commands
                     int attempt = 1;
                     while (attempt <= attempts)
                     {
-                        await directory.ValidateChallenges(order);
+                        await ValidateChallenges(directory, order);
 
                         table.Rows.Clear();
                         foreach (var item in order.Challenges)
@@ -190,6 +193,14 @@ namespace AzAcme.Cli.Commands
                         attempt++;
                     }
                 });
+            }
+        }
+
+        private async Task ValidateChallenges(IAcmeDirectory directory, Order order)
+        {
+            if (await dnsLookup.ValidateTxtRecords(order))
+            {
+                await directory.ValidateChallenges(order);
             }
         }
     }
