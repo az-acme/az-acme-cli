@@ -139,6 +139,14 @@ namespace AzAcme.Core.Providers.CertesAcme
                 {
                     try
                     {
+                        var acmeOrder = (await certesOrder.Context.Resource()).Status;
+
+                        if (acmeOrder == Certes.Acme.Resource.OrderStatus.Ready)
+                        {
+                            challenge.SetStatus(DnsChallenge.DnsChallengeStatus.Validated);
+                            return order;
+                        }
+
                         var auth = await certesOrder.Context.Authorization(challenge.Identitifer);
                         await (await auth.Dns()).Validate();
 
