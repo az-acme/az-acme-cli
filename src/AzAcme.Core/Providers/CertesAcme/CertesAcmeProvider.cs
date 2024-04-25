@@ -10,7 +10,7 @@ namespace AzAcme.Core.Providers.CertesAcme
 {
     public class CertesAcmeProvider : IAcmeDirectory
     {
-     
+
         private readonly CertesAcmeConfiguration configuration;
         private readonly ILogger logger;
         private readonly IScopedSecret registrationSecret;
@@ -26,7 +26,7 @@ namespace AzAcme.Core.Providers.CertesAcme
         {
             try
             {
-                if(registration.Force || false == await this.registrationSecret.Exists())
+                if (registration.Force || false == await this.registrationSecret.Exists())
                 {
                     this.logger.LogInformation("Registering with provider...");
 
@@ -43,7 +43,7 @@ namespace AzAcme.Core.Providers.CertesAcme
                     var context = new AcmeContext(configuration.Directory);
 
                     // use EAB if we need to.
-                    if(registration.EabKeyId != null
+                    if (registration.EabKeyId != null
                         && registration.EabKey != null)
                     {
                         _ = await context.NewAccount(registration.Email, termsOfServiceAgreed: true, registration.EabKeyId, registration.EabKey, registration.EabAlgorithm.ToString());
@@ -52,7 +52,7 @@ namespace AzAcme.Core.Providers.CertesAcme
                     {
                         _ = await context.NewAccount(registration.Email, termsOfServiceAgreed: true);
                     }
-                    
+
                     var credential = context.AccountKey.ToPem();
 
                     await this.registrationSecret.CreateOrUpdate(credential);
@@ -127,9 +127,21 @@ namespace AzAcme.Core.Providers.CertesAcme
         {
             var certesOrder = order as CertesAcmeOrder;
 
-            if(certesOrder == null)
+            if (certesOrder == null)
             {
                 throw new ArgumentException($"Expecing Order to be of type '{typeof(CertesAcmeOrder).Name}' but was '{order.GetType().Name}'");
+            }
+
+            var acmeOrder = (await certesOrder.Context.Resource()).Status;
+
+            if (acmeOrder == Certes.Acme.Resource.OrderStatus.Ready)
+            {
+                foreach (var challenge in certesOrder.Challenges)
+                {
+                    challenge.SetStatus(DnsChallenge.DnsChallengeStatus.Validated);
+                }
+
+                return order;
             }
 
             foreach (var challenge in certesOrder.Challenges)
@@ -139,14 +151,6 @@ namespace AzAcme.Core.Providers.CertesAcme
                 {
                     try
                     {
-                        var acmeOrder = (await certesOrder.Context.Resource()).Status;
-
-                        if (acmeOrder == Certes.Acme.Resource.OrderStatus.Ready)
-                        {
-                            challenge.SetStatus(DnsChallenge.DnsChallengeStatus.Validated);
-                            return order;
-                        }
-
                         var auth = await certesOrder.Context.Authorization(challenge.Identitifer);
                         await (await auth.Dns()).Validate();
 
@@ -167,11 +171,11 @@ namespace AzAcme.Core.Providers.CertesAcme
                         // we'll ignore the exception, we may get some transient
                         // exceptions based on the state of the order within the
                         // provider in some cases.
-                        
+
                         // The looping will naturally end should the errors exceed the
                         // time allowed.
                     }
-                }                
+                }
             }
 
             return order;
@@ -190,7 +194,7 @@ namespace AzAcme.Core.Providers.CertesAcme
 
 
             var timeOut = DateTime.UtcNow.AddMinutes(5);
-            while(finalisedOrder.Status != Certes.Acme.Resource.OrderStatus.Valid)
+            while (finalisedOrder.Status != Certes.Acme.Resource.OrderStatus.Valid)
             {
                 this.logger.LogDebug("Waiting for order to be status '{0}'. Current status is '{1}'.", Certes.Acme.Resource.OrderStatus.Valid, finalisedOrder.Status);
                 if (DateTime.UtcNow > timeOut)
@@ -201,7 +205,7 @@ namespace AzAcme.Core.Providers.CertesAcme
                 finalisedOrder = await certesOrder.Context.Resource();
             }
 
-            if(finalisedOrder.Status != Certes.Acme.Resource.OrderStatus.Valid)
+            if (finalisedOrder.Status != Certes.Acme.Resource.OrderStatus.Valid)
             {
                 throw new NotSupportedException($"Expecting ACME Order to be Finalised, but is still in status '{finalisedOrder.Status}'");
             }
@@ -230,7 +234,7 @@ namespace AzAcme.Core.Providers.CertesAcme
         private static string ConvertToPem(CertificateChain certificateChain)
         {
             var certStore = new RelaxedCertificateStore();
-            
+
             foreach (var issuer in certificateChain.Issuers)
             {
                 certStore.Add(issuer.ToDer());
