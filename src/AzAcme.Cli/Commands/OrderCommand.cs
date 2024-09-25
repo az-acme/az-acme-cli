@@ -159,7 +159,7 @@ namespace AzAcme.Cli.Commands
                     {
                         break;
                     }
-                    await Task.Delay(delaySeconds * 1000);
+                    await Task.Delay(delaySeconds * 1500);
                     attempt++;
                 }
             }
@@ -189,7 +189,7 @@ namespace AzAcme.Cli.Commands
                             break;
                         }
 
-                        await Task.Delay(delaySeconds * 1000);
+                        await Task.Delay(delaySeconds * 1500);
                         attempt++;
                     }
                 });

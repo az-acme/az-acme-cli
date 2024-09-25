@@ -50,7 +50,7 @@ namespace AzAcme.Core.Providers.KeyVault
             var op = this.GetExistingOperationOrNull(request.Name);
 
             bool create = false;
-            if (op == null)
+            if (op == null || string.IsNullOrEmpty(request.Subject))
             {
                 create = true;
             }
@@ -70,7 +70,12 @@ namespace AzAcme.Core.Providers.KeyVault
 
                 CertificatePolicy policy;
 
-                if (request.SubjectAlternativeNames.Count > 0)
+                if (request.SubjectAlternativeNames.Count > 0
+                        && string.IsNullOrEmpty(request.Subject))
+                {
+                    policy = new CertificatePolicy(IssuerName, sans);
+                }
+                else if (request.SubjectAlternativeNames.Count > 0)
                 {
                     policy = new CertificatePolicy(IssuerName, "CN=" + request.Subject, sans);
                 }
