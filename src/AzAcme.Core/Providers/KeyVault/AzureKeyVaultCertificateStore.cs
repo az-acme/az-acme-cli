@@ -43,48 +43,57 @@ namespace AzAcme.Core.Providers.KeyVault
             
             return Task.CompletedTask;
         }
-        public async Task<CertificateCsr> Prepare(CertificateRequest request)
+        public async Task<CertificateCsr> Prepare(CertificateRequest request, bool isCreate = false)
         {
             const string IssuerName = "Unknown"; // always same for externally managed lifecycles in azure.
 
             var op = this.GetExistingOperationOrNull(request.Name);
 
-            bool create = false;
             if (op == null)
             {
-                create = true;
+                isCreate = true;
             }
             else if(op != null && op.Properties != null && false == "inprogress".Equals(op.Properties.Status, StringComparison.InvariantCultureIgnoreCase))
             {
-                create = true;
+                isCreate = true;
             }
 
-            if (create)
+            if (isCreate)
             {
-                // create pending operation.
-                var sans = new SubjectAlternativeNames();
-                foreach (var san in request.SubjectAlternativeNames)
-                {
-                    sans.DnsNames.Add(san);
-                }
-
-                CertificatePolicy policy;
-
-                if (request.SubjectAlternativeNames.Count > 0)
-                {
-                    policy = new CertificatePolicy(IssuerName, "CN=" + request.Subject, sans);
-                }
-                else
-                {
-                    policy = new CertificatePolicy(IssuerName, "CN=" + request.Subject);
-                }
-
-                op = await client.StartCreateCertificateAsync(request.Name, policy);
+                op = await GenerateCertificationOperation(request, IssuerName);
             }
 
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
             return new CertificateCsr(request.Name, op.Properties.Csr);
 #pragma warning restore CS8602 // Dereference of a possibly null reference.
+        }
+
+        private async Task<CertificateOperation?> GenerateCertificationOperation(CertificateRequest request, string IssuerName)
+        {
+            // create pending operation.
+            var sans = new SubjectAlternativeNames();
+            foreach (var san in request.SubjectAlternativeNames)
+            {
+                sans.DnsNames.Add(san);
+            }
+
+            CertificatePolicy policy;
+            if (request.SubjectAlternativeNames.Count > 0
+               && string.IsNullOrEmpty(request.Subject))
+            {
+                policy = new CertificatePolicy(IssuerName, sans);
+            }
+            else if (request.SubjectAlternativeNames.Count > 0)
+            {
+                policy = new CertificatePolicy(IssuerName, "CN=" + request.Subject, sans);
+            }
+            else
+            {
+                policy = new CertificatePolicy(IssuerName, "CN=" + request.Subject);
+            }
+
+            return await client.StartCreateCertificateAsync(request.Name, policy);
+
         }
 
         public async Task Complete(CertificateRequest request, CerticateChain chain)

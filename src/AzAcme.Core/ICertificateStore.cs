@@ -8,7 +8,7 @@ namespace AzAcme.Core
         
         Task<CertificateMetadata> GetMetadata(CertificateRequest request);
 
-        Task<CertificateCsr> Prepare(CertificateRequest request);
+        Task<CertificateCsr> Prepare(CertificateRequest request, bool isCreate = false);
 
         Task Complete(CertificateRequest request, CerticateChain chain);
     }

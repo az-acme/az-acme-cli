@@ -99,7 +99,15 @@ namespace AzAcme.Cli.Commands
                     this.logger.LogInformation("DNS challenges successfully validated.");
 
                     this.logger.LogInformation("Preparing Certificate CSR in Azure Key Vault.");
-                    var csr = await certificateStore.Prepare(certificateRequest);
+                    CertificateCsr csr;
+                    if (string.IsNullOrEmpty(certificateRequest.Subject))
+                    {
+                        csr = await certificateStore.Prepare(certificateRequest, true);
+                    }
+                    else
+                    {
+                        csr = await certificateStore.Prepare(certificateRequest, false);
+                    }
 
                     this.logger.LogInformation("Finalising the order with ACME provider using generated CSR.");
                     var chain = await acmeDirectory.Finalise(order, csr);
@@ -159,7 +167,7 @@ namespace AzAcme.Cli.Commands
                     {
                         break;
                     }
-                    await Task.Delay(delaySeconds * 1000);
+                    await Task.Delay(delaySeconds * 2000);
                     attempt++;
                 }
             }
@@ -189,7 +197,7 @@ namespace AzAcme.Cli.Commands
                             break;
                         }
 
-                        await Task.Delay(delaySeconds * 1000);
+                        await Task.Delay(delaySeconds * 2000);
                         attempt++;
                     }
                 });

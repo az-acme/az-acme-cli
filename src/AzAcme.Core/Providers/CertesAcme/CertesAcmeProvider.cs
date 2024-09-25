@@ -99,7 +99,10 @@ namespace AzAcme.Core.Providers.CertesAcme
                 var acmeContext = new AcmeContext(this.configuration.Directory, pem);
 
                 var all = new List<string>();
-                all.Add(certificateRequest.Subject);
+                if (!string.IsNullOrEmpty(certificateRequest.Subject))
+                {
+                    all.Add(certificateRequest.Subject);
+                }
                 all.AddRange(certificateRequest.SubjectAlternativeNames);
 
                 var newOrder = await acmeContext.NewOrder(all);
