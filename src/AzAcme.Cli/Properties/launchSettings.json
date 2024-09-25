@@ -3,22 +3,6 @@
     "AzAcme.Cli": {
       "commandName": "Project",
       "commandLineArgs": "\r\n"
-    },
-    "StagingLetsEncryrpt": {
-      "commandName": "Project",
-      "commandLineArgs": "order\r\n--key-vault-uri\r\nhttps://keyvaultmanualmichael.vault.azure.net/\r\n--certificate\r\ncert-le-stg-101\r\n--server\r\nhttps://acme-staging-v02.api.letsencrypt.org/directory\r\n--sans\r\ntenanta.7077d50ec843406cbbf5fd3df42553b7.site.dev.australiaeast.cvecommerce.commerce.vision\r\n--account-secret\r\nreg-staging-lets-encrypt\r\n--dns-provider\r\nAzure\r\n--azure-dns-zone\r\n/subscriptions/7077d50e-c843-406c-bbf5-fd3df42553b7/resourceGroups/cv-rg-site-dev-australiaeast-7077d50ec843406cbbf5fd3df42553b/providers/Microsoft.Network/dnszones/7077d50ec843406cbbf5fd3df42553b7.site.dev.australiaeast.cvecommerce.commerce.vision\r\n--verbose"
-    },
-    "StagingLetsEncryptTB": {
-      "commandName": "Project",
-      "commandLineArgs": "order\r\n--key-vault-uri\r\nhttps://keyvaultmanualmichael.vault.azure.net/\r\n--certificate\r\ncert-le-stg-101\r\n--server\r\nhttps://acme-staging-v02.api.letsencrypt.org/directory\r\n--sans\r\ntenantb.7077d50ec843406cbbf5fd3df42553b7.site.dev.australiaeast.cvecommerce.commerce.vision\r\n--account-secret\r\nreg-staging-lets-encrypt\r\n--dns-provider\r\nAzure\r\n--azure-dns-zone\r\n/subscriptions/7077d50e-c843-406c-bbf5-fd3df42553b7/resourceGroups/cv-rg-site-dev-australiaeast-7077d50ec843406cbbf5fd3df42553b/providers/Microsoft.Network/dnszones/7077d50ec843406cbbf5fd3df42553b7.site.dev.australiaeast.cvecommerce.commerce.vision\r\n--verbose"
-    },
-    "ProdLetsEncryptTA": {
-      "commandName": "Project",
-      "commandLineArgs": "order\r\n--key-vault-uri\r\nhttps://keyvaultmanualmichael.vault.azure.net/\r\n--certificate\r\ncert-le-stg-101\r\n--server\r\nhttps://acme-v02.api.letsencrypt.org/directory\r\n--sans\r\ntenanta.7077d50ec843406cbbf5fd3df42553b7.site.dev.australiaeast.cvecommerce.commerce.vision\r\n--account-secret\r\nreg-stg-lets-encrypt\r\n--dns-provider\r\nAzure\r\n--azure-dns-zone\r\n/subscriptions/7077d50e-c843-406c-bbf5-fd3df42553b7/resourceGroups/cv-rg-site-dev-australiaeast-7077d50ec843406cbbf5fd3df42553b/providers/Microsoft.Network/dnszones/7077d50ec843406cbbf5fd3df42553b7.site.dev.australiaeast.cvecommerce.commerce.vision\r\n--verbose"
-    },
-    "ProdLetsEncryptB": {
-      "commandName": "Project",
-      "commandLineArgs": "order\r\n--key-vault-uri\r\nhttps://keyvaultmanualmichael.vault.azure.net/\r\n--certificate\r\ncert-le-stg-102\r\n--server\r\nhttps://acme-v02.api.letsencrypt.org/directory\r\n--sans\r\ntenantb.7077d50ec843406cbbf5fd3df42553b7.site.dev.australiaeast.cvecommerce.commerce.vision\r\n--account-secret\r\nreg-stg-lets-encrypt\r\n--dns-provider\r\nAzure\r\n--azure-dns-zone\r\n/subscriptions/7077d50e-c843-406c-bbf5-fd3df42553b7/resourceGroups/cv-rg-site-dev-australiaeast-7077d50ec843406cbbf5fd3df42553b/providers/Microsoft.Network/dnszones/7077d50ec843406cbbf5fd3df42553b7.site.dev.australiaeast.cvecommerce.commerce.vision\r\n--verbose"
     }
   }
 }
