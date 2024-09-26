@@ -22,7 +22,7 @@ namespace AzAcme.Cli.Commands.Options
         public int RenewWithinDays { get; set; }
 
         private string _subject = "";
-        [Option("subject", Required = true, HelpText = "Subject name of the certificate, such as 'foo.example.com'.")]
+        [Option("subject", Required = false, HelpText = "Subject name of the certificate, such as 'foo.example.com'.")]
         public string Subject { get => _subject; set { _subject = value.TrimEnd(new char[] { '\n', '\r' }); } }
 
         [Option("dns-provider", Required = true, Default = DnsProviders.Azure, HelpText = "DNS provider for challenges.")]
