@@ -50,7 +50,7 @@ namespace AzAcme.Core.Providers.KeyVault
             var op = this.GetExistingOperationOrNull(request.Name);
 
             bool create = false;
-            if (op == null || string.IsNullOrEmpty(request.Subject))
+            if (op == null)
             {
                 create = true;
             }
