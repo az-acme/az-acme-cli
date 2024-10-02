@@ -70,7 +70,12 @@ namespace AzAcme.Core.Providers.KeyVault
 
                 CertificatePolicy policy;
 
-                if (request.SubjectAlternativeNames.Count > 0)
+                if (request.SubjectAlternativeNames.Count > 0
+                        && string.IsNullOrEmpty(request.Subject))
+                {
+                    policy = new CertificatePolicy(IssuerName, sans);
+                }
+                else if (request.SubjectAlternativeNames.Count > 0)
                 {
                     policy = new CertificatePolicy(IssuerName, "CN=" + request.Subject, sans);
                 }
