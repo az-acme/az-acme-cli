@@ -55,6 +55,7 @@ namespace AzAcme.Cli
 
                         if (options.AzureChinaCloud)
                         {
+                            // Azure China Cloud Uri's
                             baseUri = "https://management.chinacloudapi.cn";
                         }
 

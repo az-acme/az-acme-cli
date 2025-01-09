@@ -33,22 +33,22 @@ namespace AzAcme.Cli.Commands.Options
         public string DnsZoneResourceId { get => _dnsZone; set { _dnsZone = value.TrimEnd(new char[] { '\n', '\r' }); } }
 
         private string[] _sans;
-        [Option("sans", Required = false, Separator = ' ', HelpText = "Subjet Alternative Names (SANs) space separated.")]
+        [Option("sans", Required = false, Separator = ' ', HelpText = "Subject Alternative Names (SANs) space separated.")]
         public IList<string> SubjectAlternativeNames { get => _sans; set { _sans = value.Select(v => v.TrimEnd(new char[] { '\n', '\r' })).ToArray(); } }
 
         [Option("aad-tenant", Required = false, HelpText = "Explicitly set AAD Tenant ID for obtaining JWT token for Azure DNS API.")]
         public string? AadTenantId { get; set; } = null;
 
-        [Option("zone-name", Required = false, HelpText = "Set zone name when being delegated from to calculare correct TXT records.")]
+        [Option("zone-name", Required = false, HelpText = "Set zone name when being delegated from to calculate correct TXT records.")]
         public string Zone { get; set; }
 
         [Option("force-order", HelpText = "Force order / renewal even if not expiring soon.")]
         public bool ForceOrder { get; set; } = false;
 
-        [Option("verification-timeout-seconds", Required = false, Default = 60, HelpText = "Challenge verification timout in seconds.")]
+        [Option("verification-timeout-seconds", Required = false, Default = 60, HelpText = "Challenge verification timeout in seconds.")]
         public int VerificationTimeoutSeconds { get; set; }
 
-        [Option("disable-livetable", HelpText = "Disable Live tables. Required for some Azuer DevOps pipelines.")]
+        [Option("disable-livetable", HelpText = "Disable Live tables. Required for some Azure DevOps pipelines.")]
         public bool DisableLiveTable { get; set; } = false;
 
         [Option("cf-zone-id", Required = false, HelpText = "Zone ID of the Cloudflare-Site. Required when using Cloudflare DNS provider.")]
@@ -60,7 +60,7 @@ namespace AzAcme.Cli.Commands.Options
         [Option("dns-lookup", Required = false, Default = "", HelpText = "DNS lookup server pre-defined name or custom IP address for challenge pre-validation.")]
         public string DnsLookup { get; set; }
 
-        [Option("AzureChinaCloud", HelpText = "If this flag is present we will use Azure China Cloud endpoints.")]
+        [Option("azure-china-cloud", HelpText = "If this flag is present we will use Azure China Cloud endpoints.")]
         public bool AzureChinaCloud { get; set; } = false;
 
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
