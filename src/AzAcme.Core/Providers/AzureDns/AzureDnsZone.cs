@@ -22,13 +22,14 @@ namespace AzAcme.Core.Providers.AzureDns
             this.client = client ?? throw new ArgumentNullException(nameof(client));
             this.client.SubscriptionId = azureDnsResource.SubscriptionId;
             this.zoneName = !string.IsNullOrEmpty(zoneOverride) ? zoneOverride : this.azureDnsResource.Name;
-            
+
+            this.logger.LogDebug("DnsManagementClient BaseUri '{0}'.", client.BaseUri);
         }
 
         public async Task<Order> SetTxtRecords(Order order)
         {
             // determine the TXT records needed first, so we validate all before applying.
-            foreach(var challenge in order.Challenges)
+            foreach (var challenge in order.Challenges)
             {
                 var record = DnsHelpers.DetermineTxtRecordName(challenge.Identitifer, this.zoneName);
                 challenge.SetRecordName(record);
@@ -61,7 +62,7 @@ namespace AzAcme.Core.Providers.AzureDns
 
             // ReSharper disable once ReplaceWithSingleCallToFirstOrDefault
             var records = recordSets.Where(x => x.Name == challenge.TxtRecord).FirstOrDefault();
-            
+
             if (records == null)
             {
                 this.logger.LogDebug("No TXT record set for '{0}' found. Skipping delete.", challenge.TxtRecord);
@@ -82,7 +83,7 @@ namespace AzAcme.Core.Providers.AzureDns
 
             if (records == null)
             {
-                this.logger.LogDebug("DNS Records do not exist for '{0}'. Creating.",challenge.TxtRecord);
+                this.logger.LogDebug("DNS Records do not exist for '{0}'. Creating.", challenge.TxtRecord);
                 records = new RecordSet();
                 records.TTL = 60;
                 records.TxtRecords = new List<TxtRecord> { new TxtRecord(new List<string>() { challenge.TxtValue }) };
@@ -99,10 +100,10 @@ namespace AzAcme.Core.Providers.AzureDns
                 }
                 else
                 {
-                    this.logger.LogDebug("DNS Record with matching challenge value already exisits for '{0}'. Skipping.",challenge.TxtRecord);
+                    this.logger.LogDebug("DNS Record with matching challenge value already exists for '{0}'. Skipping.", challenge.TxtRecord);
                 }
             }
-            
+
         }
 
     }
